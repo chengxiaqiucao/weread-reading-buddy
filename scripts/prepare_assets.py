@@ -43,6 +43,31 @@ def rename_keys(obj):
     return obj
 
 
+def build_friend_aliases(report_data):
+    """按好友顺序生成 真实姓名 -> 好友-N 的映射。"""
+    mapping = {}
+    for i, f in enumerate(report_data.get('friends') or [], 1):
+        name = f.get('name') or ''
+        if name:
+            mapping[name] = '好友-' + str(i)
+    return mapping
+
+
+def apply_aliases(obj, mapping, alias_name_keys=('name', 'author')):
+    """递归把字符串值中出现的真实姓名替换为 好友-N（含子串，如 @某某）。"""
+    if isinstance(obj, dict):
+        return {k: (mapping.get(v, v) if k in alias_name_keys and isinstance(v, str) else apply_aliases(v, mapping))
+                for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [apply_aliases(v, mapping) for v in obj]
+    if isinstance(obj, str):
+        for real, alias in mapping.items():
+            if real in obj:
+                obj = obj.replace(real, alias)
+        return obj
+    return obj
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--source-root', required=True)
@@ -55,6 +80,8 @@ def main():
     assert m, '无法从报告页面提取数据'
     report_data = rename_keys(json.loads(m.group(1)))
     report_data.pop('simulated', None)
+    aliases = build_friend_aliases(report_data)
+    report_data = apply_aliases(report_data, aliases)
     write(os.path.join(ROOT, 'data', 'samples', 'report.json'),
           json.dumps(report_data, ensure_ascii=False, indent=2))
 
@@ -68,6 +95,9 @@ def main():
                       '<footer id="gen-footer"></footer>')
     tpl = tpl.replace("const BK = () => D.books[active];",
                       "$('#gen-footer').textContent = '生成于 ' + String(D.generatedAt||'').slice(0,10) + ' · 个人阅读报告';\nconst BK = () => D.books[active];")
+    # day() 需兼容 YYYY-MM-DD 字符串（archive.span.first/last），否则显示 Invalid Date
+    tpl = tpl.replace("function day(ts){ if(!ts) return '—'; return new Date(ts*1000)",
+                      "function day(ts){ if(!ts) return '—'; if(typeof ts==='string') return ts.replace(/-/g,'/'); return new Date(ts*1000)")
     write(os.path.join(ROOT, 'templates', 'report.html'), tpl)
 
     for name in sorted(os.listdir(os.path.join(src, '读书档案'))):
@@ -80,6 +110,7 @@ def main():
         data = json.loads(m.group(1))
         data['reading'] = json.loads(m.group(2))
         data['readingReviews'] = json.loads(m.group(3))
+        data = apply_aliases(data, aliases)  # 点评作者中若含好友真名一并脱敏
         data['base']['archiveFile'] = name[:-5].replace('_读书档案', '')
         bid = str(data['base']['bookId'])
         write(os.path.join(ROOT, 'data', 'samples', 'archives', bid + '.json'),
@@ -94,6 +125,8 @@ def main():
                           'href="../个人阅读报告.html"')
         tpl = tpl.replace("const B=D.base, A=D.archive, KEY='weread_reflection_'+B.bookId;",
                           "const B=D.base, A=D.archive, KEY='weread_reflection_'+B.bookId;\ndocument.title='读书档案 · '+B.title;\n$('#arc-footer').textContent='读书档案 · '+B.title;")
+        tpl = tpl.replace("function day(ts){if(!ts)return '—';return new Date(ts*1000)",
+                          "function day(ts){if(!ts)return '—';if(typeof ts==='string')return ts.replace(/-/g,'/');return new Date(ts*1000)")
         write(os.path.join(ROOT, 'templates', 'archive.html'), tpl)
 
     report_sample = json.load(io.open(os.path.join(ROOT, 'data', 'samples', 'report.json'), encoding='utf-8'))
