@@ -172,7 +172,7 @@ D.reading = D.reading || {};
 D.readingReviews = D.readingReviews || [];
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function day(ts){if(!ts)return '—';return new Date(ts*1000).toLocaleDateString('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'});}
+function day(ts){if(!ts)return '—';if(typeof ts==='string')return ts.replace(/-/g,'/');return new Date(ts*1000).toLocaleDateString('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'});}
 const B=D.base, A=D.archive, KEY='weread_reflection_'+B.bookId;
 document.title='读书档案 · '+B.title;
 $('#arc-footer').textContent='读书档案 · '+B.title;

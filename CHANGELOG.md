@@ -1,5 +1,9 @@
 # Changelog
 
+## 未发布修复 — 2026-11-16
+
+- 修复 `templates/report.html` 与 `templates/archive.html` 的 `day()`：`archive.span.first/last` 为 `YYYY-MM-DD` 字符串，此前被当作时间戳解析导致"阅读活跃跨度"显示 Invalid Date；现兼容字符串与时间戳两种格式。
+
 ## V0.1.0 — 2026-11-16
 
 首个版本，从阅读报告试跑页面固化为可复用技能。
