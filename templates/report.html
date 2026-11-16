@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>个人阅读报告 · 三本在读 · 2026-11-16</title>
+<style>
+:root{
+  --paper:#f3eee2; --paper-2:#eae2d2; --card:#fffdf7; --ink:#1e2b31; --ink2:#5f6d72;
+  --line:rgba(30,43,49,.11); --cinnabar:#a93a2c; --jade:#2e7068; --gold:#b28a2e;
+  --shadow:0 12px 34px rgba(60,48,26,.09); --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);background:var(--paper);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Source Han Sans SC",sans-serif;
+  line-height:1.7;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 60% 40% at 8% 4%,rgba(169,58,44,.09),transparent 70%),
+             radial-gradient(ellipse 50% 45% at 96% 24%,rgba(46,112,104,.10),transparent 72%),
+             radial-gradient(ellipse 70% 40% at 50% 100%,rgba(178,138,46,.08),transparent 70%)}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.serif{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(243,238,226,.88);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.08em}
+.seal{width:30px;height:30px;border-radius:7px;background:var(--cinnabar);color:#fff;
+  display:grid;place-items:center;font-size:15px;box-shadow:0 4px 12px rgba(169,58,44,.28)}
+nav{display:flex;gap:22px;font-size:13px;color:var(--ink2)}
+nav a{text-decoration:none;padding:6px 2px;border-bottom:2px solid transparent;transition:.2s}
+nav a:hover{color:var(--cinnabar);border-bottom-color:var(--cinnabar)}
+
+/* hero */
+.hero{padding:54px 0 30px}
+.hero-grid{display:grid;grid-template-columns:212px 1fr 250px;gap:38px;align-items:center}
+.cover{width:212px;height:290px;border-radius:10px;object-fit:cover;background:#ddd;
+  box-shadow:0 18px 40px rgba(40,30,15,.22);border:1px solid rgba(255,255,255,.6)}
+.eyebrow{font-size:12px;letter-spacing:.34em;color:var(--cinnabar);font-weight:700;margin-bottom:10px}
+h1{margin:0 0 6px;font-size:42px;line-height:1.25;letter-spacing:.02em}
+.author{color:var(--ink2);font-size:15px;margin-bottom:18px}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tag{font-size:12px;padding:4px 11px;border:1px solid var(--line);border-radius:99px;
+  background:rgba(255,255,255,.55);color:var(--ink2)}
+.tag.hot{color:var(--cinnabar);border-color:rgba(169,58,44,.3);background:rgba(169,58,44,.07)}
+.lead{max-width:650px;font-size:14px;color:var(--ink2);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.ring{width:172px;height:172px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:conic-gradient(var(--cinnabar) calc(var(--p)*1%),rgba(30,43,49,.10) 0);
+  box-shadow:0 10px 30px rgba(169,58,44,.14)}
+.ring::after{content:"";position:absolute;inset:14px;border-radius:50%;background:var(--card)}
+.ring-in{position:relative;z-index:2;text-align:center}
+.ring-in b{font-size:38px;line-height:1;color:var(--cinnabar)}
+.ring-in small{display:block;font-size:11px;color:var(--ink2);margin-top:5px;letter-spacing:.1em}
+.ring-cap{font-size:12px;color:var(--ink2);text-align:center}
+
+/* section */
+section{padding:34px 0 12px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+.sec-head h2{margin:0;font-size:24px;letter-spacing:.04em}
+.sec-head .en{font-size:11px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase}
+.sec-head .note{margin-left:auto;font-size:12px;color:var(--ink2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat{padding:20px 22px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold)}
+.stat:nth-child(2)::before{background:var(--jade)}
+.stat:nth-child(3)::before{background:var(--cinnabar)}
+.stat:nth-child(4)::before{background:#6b6f8a}
+.stat .label{font-size:12px;color:var(--ink2);letter-spacing:.1em}
+.stat .value{font-size:25px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.stat .sub{font-size:12px;color:var(--ink2)}
+.stat .cmp{font-size:11px;color:var(--cinnabar)}
+
+/* delta */
+.delta{padding:22px 26px;display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center}
+.delta-side .k{font-size:11px;color:var(--ink2);letter-spacing:.12em;margin-bottom:6px}
+.delta-side .v{font-size:18px;font-weight:700}
+.delta-side .c{font-size:12px;color:var(--ink2);margin-top:3px}
+.delta-mid{text-align:center;color:var(--cinnabar);font-weight:700}
+.delta-mid .arrow{font-size:26px;line-height:1}
+.delta-mid .diff{font-size:12px;margin-top:4px;white-space:nowrap}
+.sim{display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;
+  background:rgba(178,138,46,.14);color:#8a6817;margin-left:6px;vertical-align:middle}
+
+/* highlights */
+.hl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.hl{padding:20px 22px;display:flex;flex-direction:column;gap:12px;transition:transform .25s,box-shadow .25s}
+.hl:hover{transform:translateY(-3px);box-shadow:0 18px 42px rgba(60,48,26,.14)}
+.hl-head{display:flex;gap:12px;align-items:center}
+.rank{width:34px;height:34px;flex:none;border-radius:9px;background:var(--cinnabar);color:#fff;
+  display:grid;place-items:center;font-weight:700;font-size:14px;box-shadow:0 4px 10px rgba(169,58,44,.22)}
+.hl:nth-child(2) .rank,.hl:nth-child(3) .rank{background:var(--gold)}
+.hl-chapter{font-size:14px;font-weight:700}
+.hl-meta{font-size:11px;color:var(--ink2);margin-top:2px}
+blockquote{margin:0;padding:14px 16px;border-left:3px solid var(--jade);border-radius:0 10px 10px 0;
+  background:rgba(46,112,104,.055);font-size:14px;line-height:1.85;
+  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.cmt-title{font-size:11px;letter-spacing:.12em;color:var(--gold);font-weight:700;margin-bottom:8px}
+.cmt{display:flex;gap:10px;padding:8px 0;border-top:1px dashed var(--line)}
+.cmt-no{width:18px;flex:none;font-size:11px;color:var(--gold);font-weight:700;padding-top:2px}
+.cmt-body{min-width:0;flex:1}
+.cmt-meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--ink2)}
+.cmt-meta b{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.likes{color:var(--cinnabar);white-space:nowrap;font-weight:700}
+.cmt p{margin:3px 0 0;font-size:12.5px;color:#3d4a50;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* friends */
+.fr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.fr{padding:19px 20px}
+.fr-top{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.ava{width:42px;height:42px;flex:none;border-radius:50%;display:grid;place-items:center;
+  color:#fff;font-weight:700;font-size:17px;background:linear-gradient(135deg,var(--jade),#4b8f85)}
+.fr:nth-child(3n+2) .ava{background:linear-gradient(135deg,var(--cinnabar),#d07a5c)}
+.fr:nth-child(3n) .ava{background:linear-gradient(135deg,var(--gold),#cbb06b)}
+.fr-name{font-weight:700;font-size:15px}
+.fr-rel{font-size:10px;color:var(--jade);border:1px solid rgba(46,112,104,.3);
+  padding:1px 7px;border-radius:99px;margin-left:6px;white-space:nowrap}
+.fr-time{font-size:11px;color:var(--ink2);margin-top:1px}
+.fr-books{list-style:none;margin:0;padding:0}
+.fr-books li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px}
+.fr-books li span{color:var(--ink2);font-size:11px;white-space:nowrap}
+.fr-note{grid-column:1/-1;font-size:11px;color:var(--ink2);padding:4px 2px 0}
+
+/* news */
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--cinnabar),var(--gold),var(--jade))}
+.news{position:relative;padding:0 0 18px 16px}
+.news::before{content:"";position:absolute;left:-24px;top:8px;width:11px;height:11px;border-radius:50%;
+  background:var(--card);border:2px solid var(--gold);box-shadow:0 0 0 4px var(--paper)}
+.n-card{padding:15px 18px;text-decoration:none;display:block;transition:transform .2s,box-shadow .2s}
+.n-card:hover{transform:translateX(4px);box-shadow:0 14px 32px rgba(60,48,26,.13)}
+.n-meta{display:flex;gap:10px;align-items:center;font-size:11px;color:var(--ink2);margin-bottom:5px;flex-wrap:wrap}
+.cat{padding:2px 8px;border-radius:5px;font-weight:700;color:#fff;background:var(--jade)}
+.cat.影视剧{background:var(--cinnabar)} .cat.电影{background:var(--gold)}
+.cat.荣誉{background:#6b6f8a} .cat.线下活动{background:#8a5a8e}
+.n-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.n-sum{font-size:12.5px;color:var(--ink2);margin:0}
+.n-src{font-size:11px;color:var(--gold);margin-top:7px}
+
+
+/* interaction */
+.ix-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.ix-sum .card{padding:16px 18px}
+.ix-k{font-size:11px;color:var(--ink2);letter-spacing:.1em}
+.ix-v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;margin:3px 0}
+.ix-d{font-size:11px;color:var(--cinnabar);font-weight:700}
+.ix-d.zero{color:var(--ink2)}
+.ix-card{padding:20px 22px;margin-bottom:16px}
+.ix-card h3{margin:0 0 12px;font-size:16px}
+.ix-card .sub{font-size:11px;color:var(--ink2);font-weight:400;margin-left:8px}
+.ix-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.ix-table th{text-align:left;color:var(--ink2);font-weight:500;font-size:11px;padding:7px 8px;border-bottom:1px solid var(--line)}
+.ix-table td{padding:8px;border-bottom:1px dashed var(--line)}
+.ix-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.ix-table tr:last-child td{border-bottom:none}
+.up{color:var(--cinnabar);font-weight:700}
+.flat{color:var(--ink2)}
+.ix-note{font-size:11px;color:var(--ink2);margin-top:10px;line-height:1.6}
+.idea{display:flex;gap:12px;padding:9px 0;border-top:1px dashed var(--line);font-size:12.5px}
+.idea:first-child{border-top:none}
+.idea .ch{flex:none;width:74px;color:var(--gold);font-size:11px}
+.idea .txt{flex:1}
+.idea .abs{font-size:11px;color:var(--ink2);margin-top:2px}
+@media(max-width:760px){.ix-sum{grid-template-columns:repeat(2,1fr)}.ix-table{font-size:11px}}
+
+/* notes */
+.notes{padding:22px 26px;font-size:12.5px;color:var(--ink2)}
+.notes ul{margin:8px 0 0;padding-left:20px}
+.notes li{margin:5px 0}
+footer{padding:34px 0 46px;text-align:center;font-size:11px;color:var(--ink2);border-top:1px solid var(--line);margin-top:30px}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s,transform .55s}
+.reveal.in{opacity:1;transform:none}
+@media(max-width:960px){
+  .hero-grid{grid-template-columns:150px 1fr}.ring-wrap{grid-column:1/-1;flex-direction:row;justify-content:center}
+  .stats{grid-template-columns:repeat(2,1fr)}.hl-grid,.fr-grid{grid-template-columns:1fr}
+  nav{display:none}h1{font-size:32px}.cover{width:150px;height:210px}
+}
+@media(max-width:560px){.stats{grid-template-columns:1fr}.delta{grid-template-columns:1fr;text-align:center}}
+</style>
+
+<style>
+/* ===== compact three-column layout overrides ===== */
+.wrap{max-width:1540px;padding:0 20px}
+.topbar .wrap{height:52px}
+nav{gap:15px;font-size:12px}
+.hero{padding:22px 0 8px}
+.hero-grid{grid-template-columns:124px minmax(0,1fr) 132px;gap:22px;align-items:center}
+.cover{width:124px;height:172px}
+.eyebrow{font-size:10px;letter-spacing:.24em;margin-bottom:5px}
+h1{font-size:29px;margin-bottom:3px}
+.author{font-size:12.5px;margin-bottom:9px}
+.hero-tags{gap:6px;margin-bottom:9px}
+.tag{font-size:10.5px;padding:2px 8px}
+.lead{font-size:12px;-webkit-line-clamp:2}
+.ring{width:118px;height:118px}
+.ring::after{inset:10px}
+.ring-in b{font-size:27px}
+.ring-in small{font-size:9px}
+.ring-cap{font-size:10.5px}
+
+.layout{display:grid;grid-template-columns:326px minmax(0,1fr) 372px;gap:16px;align-items:start;margin-top:6px}
+.col{min-width:0}
+.col section{padding:14px 0 4px}
+.col section:first-child{padding-top:6px}
+.sec-head{gap:9px;margin-bottom:11px;align-items:baseline}
+.sec-head h2{font-size:18px;white-space:nowrap;flex:none}
+.sec-head .en{font-size:9px;letter-spacing:.16em}
+.sec-head .note{font-size:10px;text-align:right;line-height:1.3}
+.card{box-shadow:0 7px 20px rgba(60,48,26,.07)}
+
+.stats{grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{padding:11px 13px}
+.stat .label{font-size:10.5px}
+.stat .value{font-size:19px;margin:3px 0 1px}
+.stat .sub,.stat .cmp{font-size:10px}
+
+.delta{grid-template-columns:1fr auto 1fr;gap:9px;padding:13px 15px}
+.delta-side .k{font-size:9.5px}
+.delta-side .v{font-size:15px}
+.delta-side .c{font-size:10.5px}
+.delta-mid .arrow{font-size:19px}
+.delta-mid .diff{font-size:10px}
+
+.ix-sum{grid-template-columns:repeat(2,1fr);gap:9px}
+.ix-sum .card{padding:11px 13px}
+.ix-k{font-size:10px}
+.ix-v{font-size:19px;margin:2px 0}
+.ix-d{font-size:10px}
+.ix-card{padding:14px 15px;margin-bottom:11px}
+.ix-card h3{font-size:14.5px;margin-bottom:8px}
+.ix-card .sub{font-size:9.5px}
+.ix-table{font-size:11.5px}
+.ix-table th,.ix-table td{padding:5px 5px}
+.ix-table th{font-size:9.5px}
+.ix-note{font-size:10px;margin-top:7px}
+.idea{padding:7px 0;font-size:11.5px;gap:8px}
+.idea .ch{width:58px;font-size:10px}
+.idea .abs{font-size:10px}
+
+.hl-grid{grid-template-columns:1fr;gap:11px}
+.hl{padding:13px 15px;gap:8px}
+.hl-head{gap:9px}
+.rank{width:28px;height:28px;font-size:12px;border-radius:7px}
+.hl-chapter{font-size:12.5px}
+.hl-meta{font-size:10px;margin-top:1px}
+blockquote{padding:10px 12px;font-size:12.5px;line-height:1.7;-webkit-line-clamp:4}
+.cmt{padding:6px 0;gap:8px}
+.cmt-no{font-size:10px;width:15px}
+.cmt-meta{font-size:10px}
+.cmt p{font-size:11.5px;-webkit-line-clamp:2;margin-top:2px}
+.cmt-title{font-size:10px;margin-bottom:5px}
+
+.fr-grid{grid-template-columns:1fr;gap:9px}
+.fr{padding:12px 14px}
+.fr-top{gap:9px;margin-bottom:8px}
+.ava{width:34px;height:34px;font-size:14px}
+.fr-name{font-size:13px}
+.fr-rel{font-size:9px;padding:1px 6px}
+.fr-time{font-size:10px}
+.fr-books li{padding:5px 0;font-size:11.5px;gap:6px}
+.fr-books li span{font-size:10px}
+.fr-note{font-size:10px}
+
+.timeline{padding-left:19px;margin-top:2px}
+.timeline::before{left:5px}
+.news{padding:0 0 11px 11px}
+.news::before{left:-22px;width:9px;height:9px;top:7px}
+.n-card{padding:10px 13px}
+.n-meta{font-size:9.5px;margin-bottom:3px;gap:7px}
+.cat{font-size:9px;padding:1px 6px}
+.n-title{font-size:13px;margin-bottom:2px}
+.n-sum{font-size:11.5px;line-height:1.55}
+.n-src{font-size:9.5px;margin-top:5px}
+
+.notes{padding:14px 16px;font-size:11.5px}
+.notes ul{padding-left:17px;margin:5px 0 0}
+.notes li{margin:4px 0;line-height:1.55}
+footer{padding:18px 0 26px;margin-top:12px;font-size:10px}
+
+@media(max-width:1260px){
+  .layout{grid-template-columns:300px minmax(0,1fr)}
+  .col-right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start}
+  .col-right section{padding-top:6px}
+}
+@media(max-width:840px){
+  .hero-grid{grid-template-columns:96px minmax(0,1fr)}
+  .cover{width:96px;height:134px}
+  .ring-wrap{grid-column:1/-1;flex-direction:row;justify-content:flex-start;gap:12px}
+  .layout{grid-template-columns:1fr}
+  .col-right{grid-column:auto;display:block}
+  nav{display:none}
+}
+</style>
+
+
+<style>
+.shelfbar{padding:12px 0 2px}
+.shelf-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.shelf-item{display:flex;gap:11px;align-items:center;padding:9px 12px;cursor:pointer;border-radius:12px;
+  background:var(--card);border:2px solid transparent;transition:transform .2s,box-shadow .2s,border-color .2s;min-width:0}
+.shelf-item:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(60,48,26,.1)}
+.shelf-item.active{border-color:var(--cinnabar);box-shadow:0 10px 24px rgba(169,58,44,.16)}
+.shelf-item img{width:40px;height:56px;object-fit:cover;border-radius:4px;flex:none;background:#ddd}
+.shelf-item .si-name{font-size:12.5px;font-weight:700;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shelf-item .si-prog{font-size:11px;color:var(--cinnabar);margin-top:3px}
+.shelf-item .si-bar{height:4px;background:rgba(30,43,49,.1);border-radius:3px;margin-top:5px;overflow:hidden}
+.shelf-item .si-bar i{display:block;height:100%;background:var(--cinnabar);border-radius:3px}
+@media(max-width:840px){.shelf-row{grid-template-columns:1fr}}
+</style>
+
+
+<style>
+/* ===== 分区版式 ===== */
+.scope{position:relative;border-radius:16px;padding:16px 16px 6px;margin:12px 0 22px}
+.scope-book{border:1.5px solid rgba(169,58,44,.26);background:linear-gradient(160deg,rgba(169,58,44,.035),rgba(255,253,247,.5))}
+.scope-global{border:1.5px dashed rgba(46,112,104,.34);background:linear-gradient(160deg,rgba(46,112,104,.035),rgba(255,253,247,.4))}
+.scope .col section:first-child{padding-top:2px}
+
+/* zone internal 3-col */
+.zone-grid{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;gap:14px;align-items:start}
+@media(max-width:1280px){.zone-grid{grid-template-columns:290px minmax(0,1fr)}.zone-grid .zc-3{grid-column:1/-1}}
+@media(max-width:840px){.zone-grid{grid-template-columns:1fr}.zone-grid .zc-3{grid-column:auto}}
+
+/* reading info strip */
+.ri-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.ri{padding:9px 11px;background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:9px}
+.ri .k{font-size:9.5px;color:var(--ink2);letter-spacing:.06em}
+.ri .v{font-size:14px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.ri .v small{font-size:10px;font-weight:400;color:var(--ink2)}
+
+/* reflection editor */
+.refl{padding:12px 14px}
+.refl textarea{width:100%;min-height:76px;resize:vertical;padding:9px 10px;font:inherit;font-size:12px;line-height:1.6;
+  color:var(--ink);background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:8px;outline:none}
+.refl textarea:focus{border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(169,58,44,.08)}
+.refl .refl-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+.btn{font:inherit;font-size:10.5px;font-weight:700;padding:5px 11px;border-radius:6px;border:none;cursor:pointer;transition:.2s}
+.btn-save{background:var(--cinnabar);color:#fff}
+.btn-save:hover{background:#8f2f23}
+.btn-ghost{background:transparent;color:var(--jade);border:1px solid rgba(46,112,104,.35)}
+.btn-ghost:hover{background:rgba(46,112,104,.08)}
+.refl .saved{font-size:10px;color:var(--jade);margin-left:auto}
+.refl-hint{font-size:9.5px;color:var(--ink2);margin-top:7px;line-height:1.5}
+
+/* archive tabs */
+.tabs{display:flex;gap:6px;margin-bottom:9px}
+.tab{font-size:10.5px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.5);cursor:pointer;color:var(--ink2)}
+.tab.on{background:var(--jade);color:#fff;border-color:var(--jade)}
+.arc-list{max-height:460px;overflow:auto;padding-right:4px}
+.arc-list::-webkit-scrollbar{width:6px}
+.arc-list::-webkit-scrollbar-thumb{background:rgba(30,43,49,.18);border-radius:3px}
+.arc-item{padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.6);margin-bottom:8px}
+.arc-item .ah{display:flex;justify-content:space-between;gap:8px;font-size:9.5px;color:var(--ink2);margin-bottom:4px}
+.arc-item .ah b{color:var(--gold);font-weight:700}
+.arc-item .atxt{font-size:12px;line-height:1.65;color:var(--ink)}
+.arc-item .abs{font-size:10.5px;color:var(--ink2);margin-top:5px;padding-left:9px;border-left:2px solid rgba(178,138,46,.4);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.arc-empty{padding:22px 12px;text-align:center;font-size:11.5px;color:var(--ink2);line-height:1.7}
+.arc-more{display:block;width:100%;margin-top:2px;padding:7px;font-size:10.5px;color:var(--jade);background:rgba(46,112,104,.07);
+  border:1px solid rgba(46,112,104,.25);border-radius:7px;cursor:pointer}
+.arc-more:hover{background:rgba(46,112,104,.13)}
+
+/* per-book news compact */
+.booknews{padding:12px 14px}
+.bn{padding:8px 0;border-bottom:1px dashed var(--line)}
+.bn:last-child{border-bottom:none}
+.bn .bnm{display:flex;gap:7px;align-items:center;font-size:9.5px;color:var(--ink2);margin-bottom:3px}
+.bn .bnc{padding:1px 6px;border-radius:4px;background:var(--jade);color:#fff;font-size:9px}
+.bn .bnt{font-size:12px;font-weight:700;line-height:1.4}
+.bn .bns{font-size:10.5px;color:var(--ink2);line-height:1.5;margin-top:2px}
+.bn a{text-decoration:none}
+.bn a:hover .bnt{color:var(--cinnabar)}
+
+/* ===== v4: global-top / book-bottom, archive in hero, two-col highlights ===== */
+.hero-grid{grid-template-columns:124px minmax(0,1fr) 214px}
+.hero-side{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0}
+.hero-side .ring{width:112px;height:112px}
+.hero-side .ring::after{inset:9px}
+.hero-side .ring-in b{font-size:25px}
+.hero-arc{width:100%;padding:9px 10px;background:rgba(255,253,247,.92);border:1px solid rgba(169,58,44,.24);border-radius:10px;box-shadow:0 6px 16px rgba(60,48,26,.07)}
+.hl-grid{grid-template-columns:repeat(2,1fr);gap:11px}
+.book-grid{display:grid;grid-template-columns:338px minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:1180px){.book-grid{grid-template-columns:1fr}.hl-grid{grid-template-columns:1fr}}
+@media(max-width:840px){.hero-grid{grid-template-columns:96px minmax(0,1fr)}.hero-side{grid-column:1/-1;flex-direction:row;justify-content:flex-start;align-items:center}.hero-arc{flex:1}}
+/* ===== long-list fold: 默认只显示前 N 条 ===== */
+.foldable:not(.expanded) > .fold-extra{display:none}
+.fold-more{display:block;width:100%;margin:11px 0 2px;padding:7px 12px;font:inherit;font-size:11.5px;font-weight:700;color:var(--jade);background:rgba(46,112,104,.06);border:1px dashed rgba(46,112,104,.34);border-radius:8px;cursor:pointer;transition:.2s;text-align:center}
+.fold-more:hover{background:rgba(46,112,104,.14);border-style:solid}
+.hl-grid .fold-more{grid-column:1/-1;margin:2px 0}
+.fold-more-row td{padding:5px 8px 8px!important;border-bottom:none!important}
+.fold-more-row .fold-more{margin:3px 0 0}
+</style>
+
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand"><span class="seal">读</span><span>阅读报告 · READING REPORT</span></div>
+  <nav><a href="#overview">阅读概览</a><a href="#shelf">在读书架</a><a href="#scoped">当前书目</a></nav>
+</div></div>
+
+<div class="wrap">
+  <div class="scope scope-global" id="global">
+    <div class="zone-grid">
+      <div class="col zc-1">
+        <section id="stats">
+          <div class="sec-head"><h2 class="serif">阅读统计</h2><span class="en">Reading Stats</span></div>
+          <div class="stats" id="stats-grid"></div>
+        </section>
+        <section id="interaction">
+          <div class="sec-head"><h2 class="serif">我的笔记与互动</h2><span class="en">Notes & Interactions</span></div>
+          <div class="ix-sum" id="ix-sum"></div>
+        </section>
+      </div>
+      <div class="col zc-2">
+        <section>
+          <div class="sec-head"><h2 class="serif">笔记与点评明细</h2><span class="en">Details</span></div>
+          <div class="card ix-card reveal" id="ix-books"></div>
+          <div class="card ix-card reveal" id="ix-reviews"></div>
+        </section>
+        <section>
+          <div class="sec-head"><h2 class="serif">最近想法</h2><span class="en">Recent Ideas</span><span class="note">默认展示 4 条 · 可展开</span></div>
+          <div class="card ix-card reveal" id="ix-ideas"></div>
+        </section>
+      </div>
+      <div class="col zc-3">
+        <section id="friends">
+          <div class="sec-head"><h2 class="serif">好友在读 TOP5</h2><span class="en">Friends</span></div>
+          <div class="fr-grid" id="fr-grid"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <section class="shelfbar" id="shelf">
+    <div class="sec-head"><h2 class="serif">在读书架</h2><span class="en">Reading Shelf</span><span class="note">同时在读 3 本 · 点击卡片切换当前书</span></div>
+    <div class="shelf-row" id="shelf-row"></div>
+  </section>
+
+  <div class="scope scope-book" id="scoped">
+    <section class="hero" id="overview" style="padding-top:6px">
+      <div class="hero-grid">
+        <img class="cover" id="cover" alt="书籍封面">
+        <div>
+          <div class="eyebrow">当前在读 · CURRENTLY READING</div>
+          <h1 class="serif" id="title"></h1>
+          <div class="author" id="author"></div>
+          <div class="hero-tags" id="hero-tags"></div>
+          <p class="lead serif" id="intro"></p>
+        </div>
+        <div class="hero-side" id="archive">
+          <div class="ring-wrap">
+            <div class="ring" id="ring"><div class="ring-in"><b id="ring-val"></b><small>阅读进度</small></div></div>
+            <div class="ring-cap" id="ring-cap"></div>
+          </div>
+          <div class="hero-arc" id="arc-entry"></div>
+        </div>
+      </div>
+    </section>
+    <div class="zone-grid book-grid">
+      <div class="col zc-1">
+        <section id="trace">
+          <div class="sec-head"><h2 class="serif">进度变化轨迹</h2><span class="en">Progress Delta</span><span class="note">上次 → 本次</span></div>
+          <div class="card delta reveal" id="delta"></div>
+        </section>
+        <section>
+          <div class="sec-head"><h2 class="serif">阅读信息</h2><span class="en">Reading Info</span></div>
+          <div class="ri-grid" id="ri-grid"></div>
+        </section>
+        <section id="news">
+          <div class="sec-head"><h2 class="serif">本书近期动态</h2><span class="en">Book Updates</span><span class="note" id="news-note"></span></div>
+          <div class="card booknews reveal" id="booknews"></div>
+        </section>
+      </div>
+      <div class="col zc-2">
+        <section id="highlights">
+          <div class="sec-head"><h2 class="serif">全书热门划线 TOP10</h2><span class="en">Popular Highlights</span><span class="note">每条附最热评论 3 条</span></div>
+          <div class="hl-grid" id="hl-grid"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer id="gen-footer"></footer>
+
+<script>
+const D = __WEREAD_DATA__;
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function dur(sec){ sec=Number(sec)||0; if(sec<60) return sec+'秒'; const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60; return (h?h+'小时':'')+(m?m+'分':'')+((s&&!h)?s+'秒':''); }
+function day(ts){ if(!ts) return '—'; return new Date(ts*1000).toLocaleDateString('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}); }
+function dt(ts){ return day(ts); }
+function delta(now, old){ const d = Number(now)-Number(old); return d>0 ? '<span class="up">+'+d+'</span>' : (d<0 ? '<span class="up">'+d+'</span>' : '<span class="flat">±0</span>'); }
+function rel(f){ return f.following && f.follower ? '互相关注' : (f.following ? '我关注TA' : (f.follower ? 'TA关注我' : '—')); }
+const catClass = {'动画':'','影视剧':'影视剧','电影':'电影','荣誉':'荣誉','线下活动':'线下活动','新版':'荣誉'};
+function revealAll(){ $$('.reveal').forEach(el=>el.classList.add('in')); }
+function foldify(box, limit){
+  if(!box) return;
+  box.classList.add('foldable');
+  const items = Array.from(box.children).filter(el=>!el.classList.contains('fold-more-row'));
+  if(items.length <= limit) return;
+  const rest = items.length - limit;
+  items.forEach((el,i)=>{ if(i>=limit) el.classList.add('fold-extra'); });
+  const isTable = box.tagName === 'TBODY';
+  const row = document.createElement(isTable ? 'tr' : 'button');
+  row.className = isTable ? 'fold-more-row' : 'fold-more';
+  if(!isTable) row.type = 'button';
+  const btn = isTable ? document.createElement('button') : row;
+  if(isTable){
+    btn.className='fold-more'; btn.type='button';
+    btn.textContent='展开其余 '+rest+' 条 ↓';
+    const td=document.createElement('td'); td.colSpan=6; td.appendChild(btn); row.appendChild(td);
+  } else { btn.textContent='展开其余 '+rest+' 条 ↓'; }
+  btn.onclick = ()=>{
+    const open = box.classList.toggle('expanded');
+    btn.textContent = open ? '收起 ↑' : ('展开其余 '+rest+' 条 ↓');
+    box.setAttribute('aria-expanded', open?'true':'false');
+  };
+  box.appendChild(row);
+}
+
+
+let active = 0, arcTab = 'marks';
+$('#gen-footer').textContent = '生成于 ' + String(D.generatedAt||'').slice(0,10) + ' · 个人阅读报告';
+const BK = () => D.books[active];
+const key = bid => 'weread_reflection_' + bid;
+
+function renderShelf(){
+  $('#shelf-row').innerHTML = D.books.map((bk,i)=>{
+    const b = bk.base;
+    return '<div class="shelf-item '+(i===active?'active':'')+'" data-i="'+i+'">'+
+      '<img src="'+esc(b.cover)+'" alt="">'+
+      '<div style="min-width:0"><div class="si-name">'+esc(b.title)+'</div>'+
+      '<div class="si-prog">已读 '+b.progress+'% · 第'+b.currentChapterIdx+'章</div>'+
+      '<div class="si-bar"><i style="width:'+b.progress+'%"></i></div></div></div>';
+  }).join('');
+  $$('.shelf-item').forEach(el=>el.addEventListener('click',()=>{ active = +el.dataset.i; arcTab='marks'; renderDynamic(); }));
+}
+
+function renderHero(){
+  const b = BK().base;
+  document.title = '个人阅读报告 · '+b.title.slice(0,12)+' · 2026-11-16';
+  $('#cover').src = b.cover;
+  $('#title').textContent = b.title;
+  $('#author').textContent = '作者：' + b.author + ' · 评分 ' + (b.rating/100).toFixed(1) + ' · 共 ' + b.totalChapters + ' 章';
+  $('#hero-tags').innerHTML = '<span class="tag hot">在读书目 '+(active+1)+'/'+D.books.length+'</span><span class="tag">已读 '+b.progress+'%</span><span class="tag">当前：第 '+b.currentChapterIdx+' 章 · '+esc(b.currentChapterTitle)+'</span><span class="tag">全书热门划线 '+b.highlightsTotal+' 条</span>';
+  $('#intro').textContent = b.intro || '';
+  $('#ring').style.setProperty('--p', b.progress);
+  $('#ring-val').textContent = b.progress + '%';
+  $('#ring-cap').innerHTML = '最后阅读<br>' + day(b.lastReadTime);
+}
+
+function renderDelta(){
+  const b = BK().base;
+  $('#delta').innerHTML =
+    '<div class="delta-side"><div class="k">上次调用快照 </div><div class="v serif">'+b.previousProgress+'%</div><div class="c">第 '+b.previousChapterIdx+' 章 · '+esc(b.previousChapterTitle)+'</div></div>'+
+    '<div class="delta-mid"><div class="arrow">→</div><div class="diff">+'+(b.progress-b.previousProgress)+'% · '+(b.currentChapterIdx-b.previousChapterIdx)+' 章</div></div>'+
+    '<div class="delta-side"><div class="k">本次调用快照</div><div class="v serif">'+b.progress+'%</div><div class="c">第 '+b.currentChapterIdx+' 章 · '+esc(b.currentChapterTitle)+'</div></div>';
+}
+
+function renderReadingInfo(){
+  const a = BK().archive, r = a.readingInfo, s = a.span;
+  const items = [
+    ['当前进度', r.progress+'<small>% · 第'+r.currentChapterIdx+'章</small>'],
+    ['最后阅读', '<span style="font-size:12px">'+day(r.updateTime)+'</span>'],
+    ['笔记规模', a.bookmarkTotal+a.ideaTotal+'<small>条（划线'+a.bookmarkTotal+' / 想法'+a.ideaTotal+'）</small>'],
+    ['阅读活跃跨度', s.first ? (day(s.first)+'<small> ~ '+day(s.last)+'</small>') : '—<small>暂无笔记</small>']
+  ];
+  $('#ri-grid').innerHTML = items.map(([k,v])=>'<div class="ri"><div class="k">'+k+'</div><div class="v serif">'+v+'</div></div>').join('');
+}
+
+function renderHighlights(){
+  $('#hl-grid').innerHTML = BK().highlights.map(h =>
+    '<article class="card hl reveal">'+
+      '<div class="hl-head"><span class="rank">'+String(h.rank).padStart(2,'0')+'</span><div><div class="hl-chapter">第 '+h.chapterIdx+' 章 · '+esc(h.chapterTitle)+'</div><div class="hl-meta">'+h.highlightCount+' 人划线 · '+h.commentTotal+' 条想法 · range '+esc(h.range)+'</div></div></div>'+
+      '<blockquote class="serif">'+esc(h.text)+'</blockquote>'+
+      '<div><div class="cmt-title">最热评论 TOP3 · 按点赞数</div>'+
+        h.comments.map((c,i)=>'<div class="cmt"><span class="cmt-no">'+(i+1)+'</span><div class="cmt-body"><div class="cmt-meta"><b>'+esc(c.author)+'</b><span class="likes">♥ '+c.likes+'</span></div><p class="serif">'+esc(c.content)+'</p></div></div>').join('')+
+      '</div></article>').join('');
+  foldify($('#hl-grid'), 4);
+}
+
+function renderBookNews(){
+  const ns = BK().news;
+  $('#news-note').textContent = '真实相关 '+ns.length+' 条 · 不硬凑';
+  $('#booknews').innerHTML = ns.length ? ns.map(n =>
+    '<div class="bn"><a href="'+esc(n.url)+'" target="_blank" rel="noopener">'+
+    '<div class="bnm"><span>'+esc(n.date)+'</span><span class="bnc">'+esc(n.cat)+'</span></div>'+
+    '<div class="bnt">'+esc(n.title)+'</div><div class="bns">'+esc(n.summary)+'</div></a></div>').join('')
+    : '<div class="arc-empty">暂无检索到与该书相关的近期公开动态</div>';
+}
+
+function renderArchive(){
+  const a = BK().archive, b = BK().base;
+  const NAMES={'31131759':'剑来','25600453':'股票作手回忆录','23523072':'中国历代政治得失'};
+  const fname = encodeURIComponent((b.archiveFile||NAMES[b.bookId]||b.title.slice(0,12))+'_读书档案.html');
+  $('#arc-entry').innerHTML =
+    '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--cinnabar);margin-bottom:3px"><span style="font-size:13px">▤</span> 我的读书档案</div>'+
+    '<div style="font-size:9.5px;color:var(--ink2);line-height:1.5;margin-bottom:7px">划线 '+a.bookmarkTotal+' · 想法 '+a.ideaTotal+' 条 · 独立文件存放</div>'+
+    '<a href="读书档案/'+fname+'" target="_blank" rel="noopener" class="btn btn-save" style="display:block;text-align:center;text-decoration:none;font-size:10.5px;padding:6px 8px">打开完整档案 →</a>';
+}
+
+function renderDynamic(){ renderShelf(); renderHero(); renderDelta(); renderReadingInfo(); renderHighlights(); renderBookNews(); renderArchive(); revealAll(); }
+
+/* ===== 账号级汇总 ===== */
+function renderStats(){
+  $('#stats-grid').innerHTML = [
+    ['本周', D.stats.weekly, '较上周同期 ' + Math.round((D.stats.weekly.compare||0)*100) + '%'],
+    ['本月', D.stats.monthly, '日均 ' + dur(D.stats.monthly.dayAverageReadTime)],
+    ['本年', D.stats.annually, D.stats.annually.readDays + ' 个阅读日'],
+    ['累计', D.stats.overall, D.stats.overall.readDays + ' 个阅读日']
+  ].map(([label,s,sub])=>'<div class="card stat reveal"><div class="label">'+label+'</div><div class="value">'+dur(s.totalReadTime)+'</div><div class="sub">'+sub+'</div></div>').join('');
+}
+function renderFriends(){
+  const palettes = ['#2e7068','#a93a2c','#b28a2e','#6b6f8a','#8a5a8e'];
+  $('#fr-grid').innerHTML = D.friends.map((f,i) =>
+    '<article class="card fr reveal"><div class="fr-top"><div class="ava" style="background:linear-gradient(135deg,'+palettes[i%5]+',rgba(255,255,255,.35))">'+esc(f.name.charAt(0))+'</div><div><div class="fr-name">'+esc(f.name)+'<span class="fr-rel">'+rel(f)+'</span></div><div class="fr-time">最近互动 '+day(f.latest)+' · '+f.books.length+' 本动态</div></div></div>'+
+    '<ul class="fr-books">'+f.books.map(b=>'<li><span>'+esc(b.title)+'</span><span>'+esc(b.author)+'</span></li>').join('')+'</ul></article>').join('');
+}
+function renderNotes(){
+  const N = D.notes, CUR = N.current, PRE = N.previous;
+  $('#ix-sum').innerHTML = [
+    ['笔记总数', CUR.totalNotes, PRE.totalNotes, '条'],
+    ['覆盖书籍', CUR.totalBooks, PRE.totalBooks, '本'],
+    ['想法 / 划线', CUR.reviewSum, PRE.reviewSum, '条想法'],
+    ['公开点评互动', CUR.reviewLikesSum + CUR.reviewCommentsSum, PRE.reviewLikesSum + PRE.reviewCommentsSum, '赞+评论']
+  ].map(([k,v,o,u])=>'<div class="card reveal"><div class="ix-k">'+k+'</div><div class="ix-v serif">'+v+'</div><div class="ix-d '+(v===o?'zero':'')+'">较上次 '+delta(v,o)+' '+u+'</div></div>').join('');
+  const changed = CUR.books.filter(b=>{
+    const p = PRE.books.find(x=>x.bookId===b.bookId);
+    return !p || (p.review!==b.review || p.note!==b.note || p.bookmark!==b.bookmark);
+  });
+  const shown = changed.length ? changed : CUR.books.slice(0,5);
+  $('#ix-books').innerHTML = '<h3 class="serif">笔记数量变化<span class="sub">较上次调用</span></h3>'+
+    '<table class="ix-table"><thead><tr><th>书目</th><th class="num">想法</th><th class="num">划线</th><th class="num">书签</th><th class="num">合计变化</th></tr></thead><tbody id="ix-books-body">'+
+    shown.map(b=>{
+      const p = PRE.books.find(x=>x.bookId===b.bookId) || {review:0,note:0,bookmark:0};
+      const d = (b.review-p.review)+(b.note-p.note)+(b.bookmark-p.bookmark);
+      return '<tr><td>'+esc(b.title)+'</td><td class="num">'+b.review+' <small>'+delta(b.review,p.review)+'</small></td><td class="num">'+b.note+' <small>'+delta(b.note,p.note)+'</small></td><td class="num">'+b.bookmark+'</td><td class="num">'+delta(d,0)+'</td></tr>';
+    }).join('')+'</tbody></table>';
+  $('#ix-reviews').innerHTML = '<h3 class="serif">本人公开点评互动<span class="sub">共 '+CUR.publicReviews.length+' 条</span></h3>'+
+    (CUR.publicReviews.length ? '<table class="ix-table"><thead><tr><th>书目</th><th>点评摘要</th><th class="num">赞</th><th class="num">评论</th><th class="num">较上次</th></tr></thead><tbody id="ix-reviews-body">'+
+    CUR.publicReviews.map((r,i)=>{
+      const p = PRE.publicReviews[i] || {likes:0,comments:0};
+      return '<tr><td>'+esc(r.bookTitle)+'</td><td>'+esc(r.content.length>26?r.content.slice(0,26)+'…':r.content)+'</td><td class="num">'+r.likes+'</td><td class="num">'+r.comments+'</td><td class="num">'+delta(r.likes,p.likes)+' / '+delta(r.comments,p.comments)+'</td></tr>';
+    }).join('')+'</tbody></table>' : '<div class="ix-note">无公开点评</div>');
+    foldify($('#ix-books-body'), 5);
+  foldify($('#ix-reviews-body'), 5);
+  $('#ix-ideas').innerHTML = '<h3 class="serif">最近想法<span class="sub">账号级 · 共 '+N.recentIdeas.length+' 条，默认展示 4 条</span></h3><div id="ix-ideas-list">'+
+    N.recentIdeas.map(i=>'<div class="idea"><span class="ch">第'+i.chapterIdx+'章</span><div class="txt">'+esc(i.content)+'<div class="abs">'+dt(i.createTime)+'</div></div></div>').join('')+'</div>';
+  foldify($('#ix-ideas-list'), 4);
+}
+
+renderStats(); renderFriends(); renderNotes();
+renderDynamic();
+
+</script>
+</body>
+</html>
