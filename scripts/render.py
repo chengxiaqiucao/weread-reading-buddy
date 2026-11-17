@@ -62,8 +62,18 @@ def append_log(log_path, bundle, actions):
         d = int(now) - int(old)
         return '%s（%s）' % (now, ('±0' if d == 0 else ('+%d' % d if d > 0 else str(d))))
 
+    snap = rpt.get('snapshot') or {}
     lines = ['## %s · %s' % (ts, '首次生成' if first else '更新')]
     lines.append('- 触发类型：%s' % ('首次生成（无历史快照）' if first else '常规更新（与上次快照对比）'))
+    if snap:
+        if snap.get('shortInterval'):
+            lines.append('- 快照基准：%s（距上次生成 %s，不足24h，按同一份快照处理，仅更新最新快照）' % (
+                snap.get('baselineTime', '—'), snap.get('lastGenGap', '—')))
+        elif first:
+            lines.append('- 快照基准：首次建立基准快照')
+        else:
+            lines.append('- 快照基准：%s（距上次生成 %s，已满24h，已推进为新基准）' % (
+                snap.get('baselineTime', '—'), snap.get('lastGenGap', '—')))
     lines.append('- 在读书目：%d 本 · %s' % (
         len(books), '、'.join(b['base']['title'][:16] for b in books[:10])))
     prog_bits = []

@@ -1,7 +1,7 @@
 ---
 name: weread-reading-buddy
 description: 微信读书小书童 — 一个完整的微信读书 Gateway 技能，既支持书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等基础查询，又能生成可视化个人阅读报告与每本书的独立读书档案（进度快照对比、热门划线/点评、好友在读、笔记互动、读后感 Markdown 编辑）。阅读报告覆盖全部在读书目（最多最近10本）、含最近想法原文与在读图书最热点评；档案按 bookId 固定存放、每次新增或更新，并附内容更新记录。当用户提到微信读书相关的任何查询、阅读报告、读书档案、阅读进度变化、导出笔记或整理在读书目时使用。
-version: 0.4.1
+version: 0.4.2
 ---
 
 # 微信读书小书童
@@ -77,7 +77,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 
 一份单文件 HTML，分上下两区：
 
-- **账号级（上方）**：阅读统计、笔记互动及较上次变化、在读图书最热点评（每本最多 5 条、按点赞整体排序）、好友在读 TOP5、最近想法（书名 + 章节 + 原文 80 字截断 + 正文 80 字截断 + 日期）。
+- **账号级（上方）**：阅读统计（含"上次快照时间""快照间隔"两栏及短间隔说明）、笔记互动及较上次变化、在读图书最热点评（每本最多 5 条、按点赞整体排序）、好友在读 TOP5、最近想法（书名 + 章节 + 原文 80 字截断 + 正文 80 字截断 + 日期）。
 - **随书切换（下方）**：按「快照区间优先」口径选出的在读书卡片切换，联动封面、阅读信息、进度变化轨迹、本书近期动态、热门划线 TOP10（每条附最热评论 3 条），并提供"打开完整档案"入口。选书口径见下方「选书口径」。
 
 ### 读书档案
@@ -92,9 +92,12 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 #    date/cat/title/summary/source/url）；检索不到就留空或删除该文件，禁止编造。
 #    每次生成/更新报告时都应重新触发这一步。
 
-# 1) 采集（同时把本次进度/笔记数写入快照，供下次对比）
+# 1) 采集（同时滚动更新最新快照、按 24h 规则维护基准快照，供下次对比）
 python scripts/collect.py --out data/bundle.json
-#    默认 --books 10（选书口径见下）；可选 --highlights 10 --reviews 10 --friends 5 --snapshot <path>
+#    默认 --books 10（选书口径见下）；可选 --highlights 10 --reviews 10 --friends 5
+#    --snapshot <latest 快照路径> --prev-snapshot <基准快照路径>
+#    始终保留两份快照：data/snapshots/last_call.json（最新，每次滚动更新）与
+#    data/snapshots/prev_call.json（对比基准）。
 
 # 2) 渲染报告 + 每本书的独立档案（档案走固定目录，按 bookId 一书本一份）
 python scripts/render.py all data/bundle.json "输出目录/阅读报告输出_YYYYMMDD" \
@@ -110,24 +113,30 @@ python scripts/render.py archive data/samples/archives/31131759.json 档案.html
 
 `data/samples/` 为已脱敏的可运行样例，可在没有密钥时用 `python scripts/render.py all data/bundle_sample.json demo/` 预览模板。
 
-**定时跟踪（推荐）**：阅读报告的价值在于"较上次变化"，建议用户用定时任务定期生成，例如每周一 09:00 触发本技能生成一次报告。首次运行无快照（差值显示 ±0 / 首次生成），此后每次都会与上一次快照对比呈现进度与互动变化。定时任务只负责"生成页面"，不改读后感（读后感存浏览器 localStorage，永远不会被覆盖）。
+**定时跟踪（推荐）**：阅读报告的价值在于"较上次变化"，建议用户用定时任务定期生成，例如每周一 09:00 触发本技能生成一次报告。首次运行无快照（差值显示 ±0 / 首次生成），此后每次都会与基准快照对比呈现进度与互动变化。定时任务只负责"生成页面"，不改读后感（读后感存浏览器 localStorage，永远不会被覆盖）。
 
 ### 数据流与口径
 
 ```
-Gateway API → collect.py → bundle.json + snapshots/last_call.json
+Gateway API → collect.py → bundle.json + snapshots/{last_call,prev_call}.json
                               ↓
                          render.py + templates/
                               ↓
                     个人阅读报告.html / 读书档案/*.html
+
+快照分两份：last_call.json 为最新快照（每次运行滚动更新），prev_call.json 为对比基准。
 ```
 
 - **选书口径（在读书架 + 好友在读）**：按快照区间优先，而非一律全量列书架。
   - 首次生成（无快照）：在读书架按 `readUpdateTime` 取最近 10 本；好友按最近互动取前 5 位。
   - 非首次生成：**优先取两次快照之间有过阅读记录的在读书**（在读书 `readUpdateTime > 上次快照 timestamp`），按最近阅读排序；超过 10 本仅取最近 10 本，不足 3 本则从最近在读补足到 3 本。
   - 好友在读遵守同一口径：优先上次快照后仍有互动的好友（`latest > 上次快照 timestamp`），超过 5 取 5、不足 3 从最近互动补足 3。
-  - 快照 `timestamp` 与每本书进度一起写入 `snapshots/last_call.json`，作为下次的区间起点。
-- **进度变化**：读取上次快照的进度写到 `previousProgress / previousChapterIdx / previousChapterTitle`，渲染成"进度变化轨迹"；首次运行无快照则差值为 0。
+  - 快照 `timestamp` 与每本书进度一起写入最新快照，作为下次的区间起点。
+- **24 小时快照缓冲（避免短间隔无变化）**：始终保留两份最近快照——`last_call.json`（最新，每次运行滚动更新）与 `prev_call.json`（对比基准）。
+  - 距最新快照 **不足 24 小时**：视为同一份快照，只滚动更新 `last_call.json`，**不推进基准** `prev_call.json`；"较上次变化"仍以旧基准累计，统计区显示小字说明。
+  - 距最新快照 **已满 24 小时**：把当前 latest 提升为新基准写入 `prev_call.json`，再写入新的 latest。
+  - 选书口径与好友口径的时间区间起点均取"基准快照"时间，与变化对比保持一致。
+- **进度变化**：读取基准快照的进度写到 `previousProgress / previousChapterIdx / previousChapterTitle`，渲染成"进度变化轨迹"；首次运行无快照则差值为 0。
 - **笔记互动变化**：同样基于本地快照对比笔记数与点评赞评数。
 - **在读最热点评**：`/review/list` 返回的他人公开点评按点赞数降序，每本最多 5 条，汇总后整体排序；不是"本人点评互动"。
 - **最近想法原文**：`/review/list/mine` 的 `abstract`（划线原文）与 `content`（想法正文）各自 80 字截断展示；账号级聚合最近 10 条。
@@ -156,7 +165,7 @@ Gateway API → collect.py → bundle.json + snapshots/last_call.json
 - `/readdata/detail` 的 `readLongest` 有 5 分钟阈值且最多 10 条，不能当稳定的"本周读过哪些书"。
 - 好友接口无阅读时长、无友好度，只能按最近互动时间与动态条数排序。
 - 个人想法接口 `/review/list/mine`、`/review/single` 均不返回"想法的点赞数"，只有 `isLike`（本人是否点赞过）；公开点评 `/review/list` 才有 `likesCount`。因此"最近想法"不展示点赞数。
-- Gateway 的 `skill_version`（当前 `1.0.6`）是本包向服务端上报的协议版本，与本技能版本（`0.4.1`）无关。
+- Gateway 的 `skill_version`（当前 `1.0.6`）是本包向服务端上报的协议版本，与本技能版本（`0.4.2`）无关。
 
 ## 隐私
 

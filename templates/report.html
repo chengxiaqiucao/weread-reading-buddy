@@ -78,6 +78,8 @@ section{padding:34px 0 12px}
 .stat .value{font-size:25px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
 .stat .sub{font-size:12px;color:var(--ink2)}
 .stat .cmp{font-size:11px;color:var(--cinnabar)}
+.stat .value.sm{font-size:15px;line-height:1.5;font-weight:600}
+.snap-note{display:none;margin-top:9px;padding:8px 11px;border-left:3px solid var(--gold);background:rgba(182,138,46,.07);border-radius:0 7px 7px 0;font-size:11px;line-height:1.6;color:var(--ink2)}
 
 /* delta */
 .delta{padding:22px 26px;display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center}
@@ -224,6 +226,8 @@ h1{font-size:29px;margin-bottom:3px}
 .stat .label{font-size:10.5px}
 .stat .value{font-size:19px;margin:3px 0 1px}
 .stat .sub,.stat .cmp{font-size:10px}
+.stat .value.sm{font-size:12.5px}
+.snap-note{margin-top:7px;padding:6px 9px;font-size:9.5px;line-height:1.55}
 
 .delta{grid-template-columns:1fr auto 1fr;gap:9px;padding:13px 15px}
 .delta-side .k{font-size:9.5px}
@@ -406,7 +410,7 @@ footer{padding:18px 0 26px;margin-top:12px;font-size:10px}
 <body>
 <div class="topbar"><div class="wrap">
   <div class="brand"><span class="seal">读</span><span>阅读报告 · READING REPORT</span></div>
-  <nav><a href="#overview">阅读概览</a><a href="#shelf">在读书架</a><a href="#scoped">当前书目</a></nav>
+  <nav><a href="#global">阅读概览</a><a href="#shelf">在读书架</a><a href="#scoped">当前书目</a></nav>
 </div></div>
 
 <div class="wrap">
@@ -416,6 +420,7 @@ footer{padding:18px 0 26px;margin-top:12px;font-size:10px}
         <section id="stats">
           <div class="sec-head"><h2 class="serif">阅读统计</h2><span class="en">Reading Stats</span></div>
           <div class="stats" id="stats-grid"></div>
+          <div class="snap-note" id="snap-note"></div>
         </section>
         <section id="interaction">
           <div class="sec-head"><h2 class="serif">我的笔记与互动</h2><span class="en">Notes & Interactions</span></div>
@@ -618,12 +623,28 @@ function renderDynamic(){ renderShelf(); renderHero(); renderDelta(); renderRead
 
 /* ===== 账号级汇总 ===== */
 function renderStats(){
-  $('#stats-grid').innerHTML = [
+  const snap = D.snapshot || {};
+  const cards = [
     ['本周', D.stats.weekly, '较上周同期 ' + Math.round((D.stats.weekly.compare||0)*100) + '%'],
     ['本月', D.stats.monthly, '日均 ' + dur(D.stats.monthly.dayAverageReadTime)],
     ['本年', D.stats.annually, D.stats.annually.readDays + ' 个阅读日'],
     ['累计', D.stats.overall, D.stats.overall.readDays + ' 个阅读日']
-  ].map(([label,s,sub])=>'<div class="card stat reveal"><div class="label">'+label+'</div><div class="value">'+dur(s.totalReadTime)+'</div><div class="sub">'+sub+'</div></div>').join('');
+  ].map(([label,s,sub])=>'<div class="card stat reveal"><div class="label">'+label+'</div><div class="value">'+dur(s.totalReadTime)+'</div><div class="sub">'+sub+'</div></div>');
+  // 快照两栏：上次（基准）快照时间 + 到当前快照的时间间隔
+  cards.push('<div class="card stat reveal"><div class="label">上次快照时间</div><div class="value sm">'+(snap.baselineTime||'—')+'</div><div class="sub">'+(snap.firstRun?'首次生成，暂无基准':'对比基准')+'</div></div>');
+  cards.push('<div class="card stat reveal"><div class="label">快照间隔</div><div class="value sm">'+(snap.interval||'—')+'</div><div class="sub">'+(snap.firstRun?'—':'上次快照 → 本次')+'</div></div>');
+  $('#stats-grid').innerHTML = cards.join('');
+  // 未满 24 小时的滚动更新说明
+  const note = $('#snap-note');
+  if (snap.shortInterval){
+    note.style.display='block';
+    note.innerHTML = '距上次生成不足 24 小时（'+esc(snap.lastGenGap||'')+'），按同一份快照处理：仅更新最新快照，对比基准仍为 <b>'+esc(snap.baselineTime||'—')+'</b>，故"较上次变化"以该基准累计。';
+  } else if (!snap.firstRun){
+    note.style.display='block';
+    note.innerHTML = '距上次生成已超过 24 小时（'+esc(snap.lastGenGap||'')+'），本次已将上一份快照推进为新的对比基准。';
+  } else {
+    note.style.display='none';
+  }
 }
 function renderFriends(){
   const palettes = ['#2e7068','#a93a2c','#b28a2e','#6b6f8a','#8a5a8e'];

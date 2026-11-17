@@ -30,6 +30,22 @@ def now_str():
     return datetime.now(TZ).strftime('%Y-%m-%d %H:%M')
 
 
+def interval_str(sec):
+    """把秒数格式化成人类可读的间隔（X天Y小时Z分）。"""
+    sec = max(0, int(sec or 0))
+    d, rem = divmod(sec, 86400)
+    h, rem = divmod(rem, 3600)
+    m = rem // 60
+    bits = []
+    if d:
+        bits.append('%d天' % d)
+    if h:
+        bits.append('%d小时' % h)
+    if m or not bits:
+        bits.append('%d分钟' % m)
+    return ''.join(bits)
+
+
 class Gateway:
     def __init__(self, key, delay=0.15):
         self.key = key
@@ -260,6 +276,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default='data/bundle.json')
     ap.add_argument('--snapshot', default='data/snapshots/last_call.json')
+    ap.add_argument('--prev-snapshot', default=None,
+                    help='基准（上次）快照路径；默认与 --snapshot 同目录的 prev_call.json')
     ap.add_argument('--books', type=int, default=10)
     ap.add_argument('--highlights', type=int, default=10)
     ap.add_argument('--reviews', type=int, default=10)
@@ -274,12 +292,43 @@ def main():
         raise SystemExit('未设置 WEREAD_API_KEY 环境变量')
     gw = Gateway(key)
 
-    # 提前读取上次快照：既用于进度差值，也用于「两次快照之间有阅读记录」的选书口径
-    had_snapshot = os.path.exists(args.snapshot)
-    prev = {'books': {}, 'notes': {}, 'timestamp': 0}
-    if had_snapshot:
+    # ===== 双快照机制 =====
+    # 始终保留两份最近快照：
+    #   latest（--snapshot）：最近一次采集的进度快照，每次运行滚动更新；
+    #   baseline（--prev-snapshot）：作为「较上次变化」对比基准的快照。
+    # 规则：若距 latest 的生成时间不足 24 小时，视为同一份快照——只滚动更新 latest，
+    #       不推进 baseline（对比基准保持不变，并在报告中标注短间隔）；
+    #       满 24 小时后，将当前 latest 提升为 baseline，再写入新的 latest。
+    # 这样短间隔重复生成不会把基准重置成几分钟前，避免差值恒为 0。
+    prev_path = args.prev_snapshot or os.path.join(
+        os.path.dirname(os.path.abspath(args.snapshot)), 'prev_call.json')
+    now_ts = int(time.time())
+
+    latest_prev = {'books': {}, 'notes': {}, 'timestamp': 0}
+    if os.path.exists(args.snapshot):
         with io.open(args.snapshot, encoding='utf-8') as f:
-            prev = json.load(f)
+            latest_prev = json.load(f)
+    last_ts = int(latest_prev.get('timestamp') or 0)
+    gap_sec = now_ts - last_ts if last_ts else 0
+    short_interval = bool(last_ts) and gap_sec < 86400
+
+    had_snapshot = bool(last_ts)  # 只要存在有效最近快照就不再是首次
+    if had_snapshot:
+        if short_interval:
+            # 短间隔：基准取已有的 baseline（若无则回退到 latest），本次基准不变
+            if os.path.exists(prev_path):
+                with io.open(prev_path, encoding='utf-8') as f:
+                    prev = json.load(f)
+            else:
+                prev = latest_prev
+        else:
+            # 满 24 小时：把当前 latest 提升为基准
+            prev = latest_prev
+    else:
+        prev = {'books': {}, 'notes': {}, 'timestamp': 0}
+
+    # 深拷贝一份基准快照用于回写，避免后续 prev_notes.setdefault 污染基准文件
+    baseline_to_write = json.loads(json.dumps(prev)) if had_snapshot else None
     prev_ts = int(prev.get('timestamp') or 0)
     prev_books = prev.get('books') or {}
 
@@ -385,6 +434,20 @@ def main():
         b['base']['archiveFile'] = ''.join(c for c in b['base']['title'] if c not in '\\/:*?"<>|')[:20]
         b['publicReviews'] = []
 
+    def fmt_ts(ts):
+        return datetime.fromtimestamp(int(ts), TZ).strftime('%Y-%m-%d %H:%M') if ts else ''
+
+    snapshot_info = {
+        'baselineTs': prev_ts,
+        'baselineTime': fmt_ts(prev_ts),
+        'lastGenGapSec': gap_sec,
+        'lastGenGap': interval_str(gap_sec),
+        'intervalSec': max(0, now_ts - prev_ts) if prev_ts else 0,
+        'interval': interval_str(now_ts - prev_ts) if prev_ts else '',
+        'shortInterval': short_interval,
+        'firstRun': not had_snapshot,
+    }
+
     bundle = {
         'generatedAt': now_str(),
         'report': {
@@ -394,12 +457,13 @@ def main():
             'friends': collect_friends(gw, args.friends, prev_ts, had_snapshot),
             'notes': {'current': cur, 'previous': prev_notes,
                       'recentIdeas': recent[:args.ideas], 'firstRun': not had_snapshot},
+            'snapshot': snapshot_info,
         },
         'archives': books,
     }
 
     snapshot = {
-        'timestamp': int(time.time()),
+        'timestamp': now_ts,
         'books': {b['base']['bookId']: {'progress': b['base']['progress'],
                                        'chapterIdx': b['base']['currentChapterIdx'],
                                        'chapterTitle': b['base']['currentChapterTitle'],
@@ -407,12 +471,15 @@ def main():
                                        'ideaTotal': b['archive']['ideaTotal']} for b in books},
         'notes': cur,
     }
-    for path, obj in [(args.out, bundle), (args.snapshot, snapshot)]:
+    # 基准快照回写：首次写当前快照；短间隔写回未污染的旧基准；满 24 小时写当前 latest 作为新基准
+    baseline_out = snapshot if baseline_to_write is None else baseline_to_write
+    for path, obj in [(args.out, bundle), (args.snapshot, snapshot), (prev_path, baseline_out)]:
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         with io.open(path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False, indent=2)
     print('bundle ->', args.out)
-    print('snapshot ->', args.snapshot)
+    print('latest snapshot ->', args.snapshot)
+    print('baseline snapshot ->', prev_path)
 
 
 if __name__ == '__main__':
