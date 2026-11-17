@@ -168,7 +168,8 @@ blockquote{margin:0;padding:14px 16px;border-left:3px solid var(--jade);border-r
 .idea{display:flex;gap:12px;padding:9px 0;border-top:1px dashed var(--line);font-size:12.5px}
 .idea:first-child{border-top:none}
 .idea .ch{flex:none;width:74px;color:var(--gold);font-size:11px}
-.idea .txt{flex:1}
+.idea .txt{flex:1;min-width:0}
+.idea .bk{font-size:10.5px;color:var(--jade);font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idea .abs{font-size:11px;color:var(--ink2);margin-top:2px}
 @media(max-width:760px){.ix-sum{grid-template-columns:repeat(2,1fr)}.ix-table{font-size:11px}}
 
@@ -658,7 +659,7 @@ function renderNotes(){
     foldify($('#ix-books-body'), 5);
   foldify($('#ix-reviews-body'), 5);
   $('#ix-ideas').innerHTML = '<h3 class="serif">最近想法<span class="sub">账号级 · 共 '+N.recentIdeas.length+' 条，默认展示 4 条</span></h3><div id="ix-ideas-list">'+
-    N.recentIdeas.map(i=>'<div class="idea"><span class="ch">第'+i.chapterIdx+'章</span><div class="txt">'+esc(i.content)+'<div class="abs">'+dt(i.createTime)+'</div></div></div>').join('')+'</div>';
+    N.recentIdeas.map(i=>{const raw=i.content||'';const txt=raw.length>80?raw.slice(0,80)+'…':raw;return '<div class="idea"><span class="ch">第'+i.chapterIdx+'章</span><div class="txt"><div class="bk">《'+esc(i.bookTitle||'—')+'》</div>'+esc(txt)+'<div class="abs">'+dt(i.createTime)+'</div></div></div>';}).join('')+'</div>';
   foldify($('#ix-ideas-list'), 4);
 }
 

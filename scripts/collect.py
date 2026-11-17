@@ -132,15 +132,19 @@ def collect_book(gw, book, args, news=None):
         bm['chapterTitle'] = cmap.get(str(bm['chapterUid']), (0, ''))[1]
 
     mine = gw.call('/review/list/mine', bookid=bid, count=30)
-    ideas = [{
-        'content': (r.get('review') or {}).get('content') or '',
-        'abstract': (r.get('review') or {}).get('abstract') or '',
-        'chapterName': (r.get('review') or {}).get('chapterName') or '',
-        'chapterIdx': (r.get('review') or {}).get('chapterIdx') or 0,
-        'star': (r.get('review') or {}).get('star') or 0,
-        'date': today((r.get('review') or {}).get('createTime')),
-        'createTime': (r.get('review') or {}).get('createTime') or 0,
-    } for r in (mine.get('reviews') or [])[:args.notes]]
+    ideas = []
+    for r in (mine.get('reviews') or [])[:args.notes]:
+        rv = r.get('review') or {}
+        ideas.append({
+            'content': rv.get('content') or '',
+            'abstract': rv.get('abstract') or '',
+            'chapterName': rv.get('chapterName') or '',
+            'chapterIdx': rv.get('chapterIdx') or 0,
+            'bookTitle': (rv.get('book') or {}).get('title') or book.get('title') or '',
+            'star': rv.get('star') or 0,
+            'date': today(rv.get('createTime')),
+            'createTime': rv.get('createTime') or 0,
+        })
 
     dates = [b['date'] for b in bookmarks if b['date']] + [i['date'] for i in ideas if i['date']]
     base = {
@@ -266,6 +270,7 @@ def main():
     for b in books:
         for idea in b.pop('_ideasForGlobal', []):
             recent.append({'chapterIdx': idea.get('chapterIdx') or 0,
+                           'bookTitle': idea.get('bookTitle') or '',
                            'content': idea.get('content') or '',
                            'createTime': idea.get('createTime') or 0})
     recent.sort(key=lambda x: x['createTime'], reverse=True)

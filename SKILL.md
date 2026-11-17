@@ -1,10 +1,10 @@
 ---
-name: wechat-reading-assistant
-description: 微信读书助手 — 基于 WEREAD_API_KEY 生成个人阅读报告与每本书的独立读书档案 HTML（进度快照对比、热门划线/点评、好友在读、阅读统计、笔记互动、读后感编辑）。当用户要求生成阅读报告、读书档案、查看阅读进度变化、导出阅读笔记或整理在读书目时使用。
-version: 0.1.0
+name: weread-reading-buddy
+description: 微信读书小书童 — 基于 WEREAD_API_KEY 生成个人阅读报告与每本书的独立读书档案 HTML（进度快照对比、热门划线/点评、好友在读、阅读统计、笔记互动、读后感编辑）。当用户要求生成阅读报告、读书档案、查看阅读进度变化、导出阅读笔记或整理在读书目时使用。
+version: 0.2.0
 ---
 
-# 微信读书助手
+# 微信读书小书童
 
 仅凭 `WEREAD_API_KEY` 调用微信读书 Gateway，生成两类可直接打开的视觉化页面：
 
@@ -76,7 +76,8 @@ Gateway API → collect.py → bundle.json + snapshots/last_call.json
 - `/book/bestbookmarks` 固定返回全书 Top20，章节过滤只在这 20 条内生效。
 - `/readdata/detail` 的 `readLongest` 有 5 分钟阈值且最多 10 条，不能当作稳定的“本周读过哪些书”。
 - 好友接口无阅读时长、无友好度，只能按最近互动时间与动态条数排序。
-- Gateway 的 `skill_version` 是 `1.0.5`，与本技能版本 `0.1.0` 无关。
+- 个人想法接口 `/review/list/mine`、`/review/single` 均不返回"想法的点赞数"，只有 `isLike`（本人是否点赞过）标记；公开点评 `/review/list` 才有 `likesCount`。因此报告"最近想法"不展示点赞数，只展示书名、章节、正文（80 字截断）与时间。
+- Gateway 的 `skill_version` 是 `1.0.5`，与本技能版本 `0.2.0` 无关。
 
 ## 隐私
 

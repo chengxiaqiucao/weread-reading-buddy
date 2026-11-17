@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.2.0 — 2026-11-17
+
+- 技能更名：中文名"微信读书助手"→"微信读书小书童"，英文名/技能标识 `wechat-reading-assistant` → `weread-reading-buddy`（目录名同步，git 历史延续），避免与官方技能名称雷同。
+- 阅读报告"最近想法"增强：新增关联书名（`review.book.title`），正文超过 80 字截断显示；不展示点赞数——实测 `/review/list/mine`、`/review/single` 均不返回个人想法的点赞数，只有 `isLike` 标记，避免编造数据。
+- `collect.py` 采集想法时携带 `bookTitle`；`prepare_assets.py` 固化书名回填与想法渲染改动，重跑抽取不回退。
+- 将上一条的日期修复与好友脱敏纳入本版本。
+
 ## 未发布修复 — 2026-11-16
 
 - 样例数据好友脱敏：`data/samples/report.json` 的 `friends[].name` 与档案点评作者中的真实姓名统一替换为 `好友-1`～`好友-5`。`scripts/prepare_assets.py` 新增 `build_friend_aliases/apply_aliases`，重跑抽取时自动脱敏，真名不再回流。

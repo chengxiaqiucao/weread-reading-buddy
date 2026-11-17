@@ -82,6 +82,12 @@ def main():
     report_data.pop('simulated', None)
     aliases = build_friend_aliases(report_data)
     report_data = apply_aliases(report_data, aliases)
+    # 源试跑页的最近想法无 bookTitle，按书名回填（样例均为剑来，真实数据由 collect.py 提供）
+    _ideas = (report_data.get('notes') or {}).get('recentIdeas') or []
+    if _ideas and not _ideas[0].get('bookTitle') and report_data.get('books'):
+        _src_title = report_data['books'][0]['base']['title']
+        for idea in _ideas:
+            idea['bookTitle'] = _src_title
     write(os.path.join(ROOT, 'data', 'samples', 'report.json'),
           json.dumps(report_data, ensure_ascii=False, indent=2))
 
@@ -98,6 +104,11 @@ def main():
     # day() 需兼容 YYYY-MM-DD 字符串（archive.span.first/last），否则显示 Invalid Date
     tpl = tpl.replace("function day(ts){ if(!ts) return '—'; return new Date(ts*1000)",
                       "function day(ts){ if(!ts) return '—'; if(typeof ts==='string') return ts.replace(/-/g,'/'); return new Date(ts*1000)")
+    # 最近想法：显示书名 + 正文 80 字截断（源试跑页为旧渲染，此处固化）
+    tpl = tpl.replace(".idea .txt{flex:1}",
+                      ".idea .txt{flex:1;min-width:0}\n.idea .bk{font-size:10.5px;color:var(--jade);font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}")
+    tpl = tpl.replace("N.recentIdeas.map(i=>'<div class=\"idea\"><span class=\"ch\">第'+i.chapterIdx+'章</span><div class=\"txt\">'+esc(i.content)+'<div class=\"abs\">'+dt(i.createTime)+'</div></div></div>').join('')",
+                      "N.recentIdeas.map(i=>{const raw=i.content||'';const txt=raw.length>80?raw.slice(0,80)+'…':raw;return '<div class=\"idea\"><span class=\"ch\">第'+i.chapterIdx+'章</span><div class=\"txt\"><div class=\"bk\">《'+esc(i.bookTitle||'—')+'》</div>'+esc(txt)+'<div class=\"abs\">'+dt(i.createTime)+'</div></div></div>';}).join('')")
     write(os.path.join(ROOT, 'templates', 'report.html'), tpl)
 
     for name in sorted(os.listdir(os.path.join(src, '读书档案'))):
