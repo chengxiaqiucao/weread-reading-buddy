@@ -204,8 +204,14 @@ def collect_book(gw, book, args, news=None):
     return result
 
 
-def collect_friends(gw, limit):
-    """发现页好友在读动态：真实回包用 users[] 数组，按 userVid 区分不同好友。"""
+def collect_friends(gw, limit, prev_ts=0, had_snapshot=True):
+    """发现页好友在读动态：真实回包用 users[] 数组，按 userVid 区分不同好友。
+
+    统计口径与在读书架一致：
+    - 首次生成：取最近互动的 limit 位好友；
+    - 非首次：优先取上次快照后仍有互动（latest > prev_ts）的好友，上限 limit；
+      不足 3 位则从最近互动好友中补足 3 位。
+    """
     items = (gw.call('/discover/interact/type3', count=40).get('items') or [])
     groups = {}
     for it in items:
@@ -227,7 +233,20 @@ def collect_friends(gw, limit):
             if title and all(x['title'] != title for x in g['books']):
                 g['books'].append({'title': title, 'author': bk.get('author') or ''})
     friends = sorted(groups.values(), key=lambda x: (x['latest'], len(x['books'])), reverse=True)
-    return friends[:limit]
+    if not had_snapshot:
+        return friends[:limit]
+    active = [f for f in friends if (f.get('latest') or 0) > prev_ts]
+    if len(active) > limit:
+        active = active[:limit]
+    if len(active) < 3:
+        seen = {f['vid'] for f in active}
+        for f in friends:
+            if len(active) >= 3:
+                break
+            if f['vid'] not in seen:
+                active.append(f)
+                seen.add(f['vid'])
+    return active
 
 
 def collect_stats(gw):
@@ -255,12 +274,41 @@ def main():
         raise SystemExit('未设置 WEREAD_API_KEY 环境变量')
     gw = Gateway(key)
 
+    # 提前读取上次快照：既用于进度差值，也用于「两次快照之间有阅读记录」的选书口径
+    had_snapshot = os.path.exists(args.snapshot)
+    prev = {'books': {}, 'notes': {}, 'timestamp': 0}
+    if had_snapshot:
+        with io.open(args.snapshot, encoding='utf-8') as f:
+            prev = json.load(f)
+    prev_ts = int(prev.get('timestamp') or 0)
+    prev_books = prev.get('books') or {}
+
     shelf = gw.call('/shelf/sync')
     candidates = [b for b in (shelf.get('books') or []) if not b.get('finishReading')]
     candidates.sort(key=lambda b: b.get('readUpdateTime') or 0, reverse=True)
+
+    # 选书口径：
+    #  - 首次生成（无快照）：直接从在读书架取最近 args.books 本；
+    #  - 非首次：优先两次快照之间有过阅读记录的在读书（readUpdateTime > prev_ts），
+    #    超过 args.books 取最近 args.books 本；不足 3 本则从最近在读补足到 3 本。
+    if not had_snapshot:
+        picked = candidates[:args.books]
+    else:
+        active = [b for b in candidates if (b.get('readUpdateTime') or 0) > prev_ts]
+        active = active[:args.books]
+        if len(active) < 3:
+            seen_ids = {str(b.get('bookId')) for b in active}
+            for b in candidates:
+                if len(active) >= 3:
+                    break
+                bid = str(b.get('bookId') or '')
+                if bid and bid not in seen_ids:
+                    active.append(b)
+                    seen_ids.add(bid)
+        picked = active
+
     books, seen = [], set()
-    max_try = max(30, args.books * 4)
-    for b in candidates[:max_try]:
+    for b in picked:
         bid = str(b.get('bookId') or '')
         if not bid or bid in seen:
             continue
@@ -276,8 +324,6 @@ def main():
             continue
         if arc:
             books.append(arc)
-            if len(books) >= args.books:
-                break
 
     notebooks, last_sort = [], 0
     while True:
@@ -308,12 +354,6 @@ def main():
                            'createTime': idea.get('createTime') or 0})
     recent.sort(key=lambda x: x['createTime'], reverse=True)
 
-    had_snapshot = os.path.exists(args.snapshot)
-    prev = {'books': {}, 'notes': cur}
-    if had_snapshot:
-        with io.open(args.snapshot, encoding='utf-8') as f:
-            prev = json.load(f)
-    prev_books = prev.get('books') or {}
     prev_notes = prev.get('notes') or cur
 
     # 在读图书最热点评：每本最多 5 条，汇总后按点赞数整体降序
@@ -351,7 +391,7 @@ def main():
             'generatedAt': now_str(),
             'books': books,
             'stats': collect_stats(gw),
-            'friends': collect_friends(gw, args.friends),
+            'friends': collect_friends(gw, args.friends, prev_ts, had_snapshot),
             'notes': {'current': cur, 'previous': prev_notes,
                       'recentIdeas': recent[:args.ideas], 'firstRun': not had_snapshot},
         },

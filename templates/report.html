@@ -478,7 +478,7 @@ footer{padding:18px 0 26px;margin-top:12px;font-size:10px}
           <div class="ri-grid" id="ri-grid"></div>
         </section>
         <section id="news">
-          <div class="sec-head"><h2 class="serif">本书近期动态</h2><span class="en">Book Updates</span><span class="note" id="news-note"></span></div>
+          <div class="sec-head"><h2 class="serif">本书近期动态</h2><span class="en">Book Updates</span></div>
           <div class="card booknews reveal" id="booknews"></div>
         </section>
       </div>
@@ -596,7 +596,6 @@ function renderHighlights(){
 
 function renderBookNews(){
   const ns = BK().news;
-  $('#news-note').textContent = '真实相关 '+ns.length+' 条 · 不硬凑';
   $('#booknews').innerHTML = ns.length ? ns.map(n =>
     '<div class="bn"><a href="'+esc(n.url)+'" target="_blank" rel="noopener">'+
     '<div class="bnm"><span>'+esc(n.date)+'</span><span class="bnc">'+esc(n.cat)+'</span></div>'+
