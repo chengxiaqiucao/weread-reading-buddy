@@ -220,13 +220,46 @@ def collect_book(gw, book, args, news=None):
     return result
 
 
-def collect_friends(gw, limit, prev_ts=0, had_snapshot=True):
+def pick_by_interval(candidates, time_of, prev_ts, had_snapshot, limit,
+                     min_fill=3, key_of=None):
+    """「快照区间优先」统一口径，供在读书架与好友书目共用。
+
+    candidates 需已按时间降序。首次生成取最近 limit 条；非首次优先取
+    time_of(x) > prev_ts（区间内有阅读/互动）的条目，最多 limit 条；
+    不足 min_fill 条则从最近候选中补足到 min_fill。
+    """
+    candidates = candidates or []
+    if not had_snapshot:
+        return candidates[:limit]
+    active = [x for x in candidates if (time_of(x) or 0) > prev_ts][:limit]
+    if len(active) < min_fill:
+        if key_of:
+            seen = {key_of(x) for x in active}
+            for x in candidates:
+                if len(active) >= min_fill:
+                    break
+                if key_of(x) not in seen:
+                    active.append(x)
+                    seen.add(key_of(x))
+        else:
+            seen_ids = {id(x) for x in active}
+            for x in candidates:
+                if len(active) >= min_fill:
+                    break
+                if id(x) not in seen_ids:
+                    active.append(x)
+                    seen_ids.add(id(x))
+    return active
+
+
+def collect_friends(gw, limit, prev_ts=0, had_snapshot=True, book_limit=10):
     """发现页好友在读动态：真实回包用 users[] 数组，按 userVid 区分不同好友。
 
-    统计口径与在读书架一致：
-    - 首次生成：取最近互动的 limit 位好友；
-    - 非首次：优先取上次快照后仍有互动（latest > prev_ts）的好友，上限 limit；
-      不足 3 位则从最近互动好友中补足 3 位。
+    - 好友数量：始终按最近互动取前 limit 位（默认 5），不再因快照区间内
+      无互动好友而缩减到 3 位。
+    - 每位好友的书目：改用与在读书架相同的「快照区间优先」口径展示——
+      首次取最近 book_limit 本；非首次优先区间内有互动（updateTime > prev_ts）
+      的书，最多 book_limit 本，不足 3 本从最近互动的书补足。
     """
     items = (gw.call('/discover/interact/type3', count=40).get('items') or [])
     groups = {}
@@ -234,7 +267,7 @@ def collect_friends(gw, limit, prev_ts=0, had_snapshot=True):
         users = it.get('users') or ([it['user']] if it.get('user') else [])
         bk = it.get('book') or {}
         title = bk.get('title') or ''
-        upd = it.get('updateTime') or 0
+        upd = int(it.get('updateTime') or 0)
         for user in users:
             name = user.get('name') or user.get('nick') or ''
             if not name:
@@ -246,23 +279,22 @@ def collect_friends(gw, limit, prev_ts=0, had_snapshot=True):
             g['latest'] = max(g['latest'], upd, int(user.get('updateTime') or 0))
             g['following'] = g['following'] or bool(user.get('isFollowing'))
             g['follower'] = g['follower'] or bool(user.get('isFollower'))
-            if title and all(x['title'] != title for x in g['books']):
-                g['books'].append({'title': title, 'author': bk.get('author') or ''})
+            if title:
+                exists = next((x for x in g['books'] if x['title'] == title), None)
+                if exists:
+                    exists['updateTime'] = max(exists.get('updateTime') or 0, upd)
+                else:
+                    g['books'].append({'title': title, 'author': bk.get('author') or '',
+                                       'updateTime': upd})
+    # 好友固定取最近互动的前 limit 位；区间口径下沉到每位好友的书目上
     friends = sorted(groups.values(), key=lambda x: (x['latest'], len(x['books'])), reverse=True)
-    if not had_snapshot:
-        return friends[:limit]
-    active = [f for f in friends if (f.get('latest') or 0) > prev_ts]
-    if len(active) > limit:
-        active = active[:limit]
-    if len(active) < 3:
-        seen = {f['vid'] for f in active}
-        for f in friends:
-            if len(active) >= 3:
-                break
-            if f['vid'] not in seen:
-                active.append(f)
-                seen.add(f['vid'])
-    return active
+    picked = friends[:limit]
+    for f in picked:
+        books = sorted(f['books'], key=lambda b: b.get('updateTime') or 0, reverse=True)
+        f['books'] = pick_by_interval(books, lambda b: b.get('updateTime') or 0,
+                                      prev_ts, had_snapshot, book_limit, 3,
+                                      key_of=lambda b: b['title'])
+    return picked
 
 
 def collect_stats(gw):
@@ -340,21 +372,9 @@ def main():
     #  - 首次生成（无快照）：直接从在读书架取最近 args.books 本；
     #  - 非首次：优先两次快照之间有过阅读记录的在读书（readUpdateTime > prev_ts），
     #    超过 args.books 取最近 args.books 本；不足 3 本则从最近在读补足到 3 本。
-    if not had_snapshot:
-        picked = candidates[:args.books]
-    else:
-        active = [b for b in candidates if (b.get('readUpdateTime') or 0) > prev_ts]
-        active = active[:args.books]
-        if len(active) < 3:
-            seen_ids = {str(b.get('bookId')) for b in active}
-            for b in candidates:
-                if len(active) >= 3:
-                    break
-                bid = str(b.get('bookId') or '')
-                if bid and bid not in seen_ids:
-                    active.append(b)
-                    seen_ids.add(bid)
-        picked = active
+    picked = pick_by_interval(candidates, lambda b: b.get('readUpdateTime') or 0,
+                              prev_ts, had_snapshot, args.books, 3,
+                              key_of=lambda b: str(b.get('bookId') or ''))
 
     books, seen = [], set()
     for b in picked:
@@ -454,7 +474,8 @@ def main():
             'generatedAt': now_str(),
             'books': books,
             'stats': collect_stats(gw),
-            'friends': collect_friends(gw, args.friends, prev_ts, had_snapshot),
+            'friends': collect_friends(gw, args.friends, prev_ts, had_snapshot,
+                                       book_limit=args.books),
             'notes': {'current': cur, 'previous': prev_notes,
                       'recentIdeas': recent[:args.ideas], 'firstRun': not had_snapshot},
             'snapshot': snapshot_info,
