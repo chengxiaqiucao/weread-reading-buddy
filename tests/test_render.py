@@ -16,19 +16,20 @@ SCRIPTS = os.path.join(ROOT, 'scripts')
 class RenderTest(unittest.TestCase):
     def test_render_all(self):
         with tempfile.TemporaryDirectory() as td:
-            out_dir = os.path.join(td, '阅读报告输出')
-            archive_dir = os.path.join(td, '读书档案')
-            log = os.path.join(archive_dir, '更新记录.md')
+            root = os.path.join(td, 'WeReadBuddy')
             cmd = [sys.executable, os.path.join(SCRIPTS, 'render.py'), 'all',
-                   os.path.join(ROOT, 'data', 'bundle_sample.json'), out_dir,
-                   '--archive-dir', archive_dir, '--log', log]
+                   os.path.join(ROOT, 'data', 'bundle_sample.json'), root]
             subprocess.run(cmd, check=True, cwd=ROOT, capture_output=True)
 
-            report = os.path.join(out_dir, '个人阅读报告.html')
-            archive = os.path.join(archive_dir, '31131759_读书档案.html')
+            report = os.path.join(root, '我的阅读报告_20261117.html')
+            archive_dir = os.path.join(root, '读书档案')
+            log = os.path.join(root, '报告及档案更新记录.md')
             self.assertTrue(os.path.exists(report))
-            self.assertTrue(os.path.exists(archive))
             self.assertTrue(os.path.exists(log))
+            archives = [f for f in os.listdir(archive_dir) if f.endswith('_读书档案.html')]
+            self.assertTrue(archives)
+            self.assertTrue(all(not re.match(r'^\d+_读书档案\.html$', f) for f in archives),
+                            '档案应按书名命名，不应为纯 bookId')
 
             with io.open(report, encoding='utf-8') as f:
                 html = f.read()
@@ -37,9 +38,11 @@ class RenderTest(unittest.TestCase):
             self.assertIn('展开其余', html)
             self.assertNotIn('数据说明', html)
             self.assertNotIn('账号全局', html)
-            self.assertIn('archiveRel', html)  # 报告持有指向固定档案目录的相对路径
+            self.assertIn('archiveRel', html)  # 报告持有指向档案目录的相对路径
+            self.assertIn('ix-scroll', html)   # 明细长列表固定高度容器
 
-            with io.open(archive, encoding='utf-8') as f:
+            arc_file = os.path.join(archive_dir, archives[0])
+            with io.open(arc_file, encoding='utf-8') as f:
                 arc = f.read()
             self.assertNotIn('__WEREAD_DATA__', arc)
             self.assertIn('refl-mask', arc)
@@ -52,6 +55,13 @@ class RenderTest(unittest.TestCase):
                 log_text = f.read()
             self.assertIn('内容更新记录', log_text)
             self.assertIn('档案更新', log_text)
+
+    def test_safe_bookname(self):
+        sys.path.insert(0, SCRIPTS)
+        import render
+        self.assertEqual(render.safe_bookname('剑来（1-54 完结精校版）'), '剑来（1-54 完结精校版）')
+        self.assertEqual(render.safe_bookname('A/B:C?D'), 'A_B_C_D')
+        self.assertEqual(render.safe_bookname('  ...  '), '未命名')
 
     def test_samples_valid(self):
         with io.open(os.path.join(ROOT, 'data', 'samples', 'report.json'), encoding='utf-8') as f:

@@ -2,28 +2,32 @@
 """把数据 JSON 注入 HTML 模板，生成可直接打开的报告 / 读书档案。
 
 用法：
-    python scripts/render.py report  data/samples/report.json            out/个人阅读报告.html
-    python scripts/render.py archive data/samples/archives/31131759.json out/读书档案/剑来_读书档案.html
-    python scripts/render.py all     data/bundle.json                    out/ [--archive-dir DIR] [--log FILE]
+    python scripts/render.py report  data/samples/report.json            我的阅读报告.html
+    python scripts/render.py archive data/samples/archives/31131759.json 读书档案/剑来_读书档案.html
+    python scripts/render.py all     data/bundle.json                    WeReadBuddy/ [--archive-dir DIR] [--log FILE]
 
 bundle.json 结构：{"report": {报告数据}, "archives": [档案数据, ...]}
 
-设计要点（all 模式）：
-  - 报告输出到 out/ 下的日期目录；档案固定输出到 --archive-dir（默认 out 的同级“读书档案”目录），
-    保证档案目录稳定、每本书按 bookId 只有一份文件、每次调用新增或覆盖更新。
+设计要点（all 模式，统一到单一根目录）：
+  - 根目录（位置参数 out）下只放三类产物：
+      * 我的阅读报告_YYYYMMDD.html   ← 可保留多份，按生成日期命名
+      * 读书档案/书本名称_读书档案.html ← 每本书一份，按书名命名（非法字符替换、重名加 bookId 后缀）
+      * 报告及档案更新记录.md         ← 内容更新情况，最新在最上
   - 报告与档案互相写入相对路径（archiveRel / reportRel），跨目录也能正确跳转。
-  - 每次 all 渲染向 --log（默认档案目录下的 更新记录.md）追加一条内容更新记录。
+  - 档案每次调用存在即覆盖更新、不存在则新增；报告按日期命名，可累积多份。
 """
 import argparse
 import io
 import json
 import os
+import re
 from datetime import datetime, timezone, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 PLACEHOLDER = '__WEREAD_DATA__'
 TZ = timezone(timedelta(hours=8))
+ILLEGAL = re.compile(r'[\\/:*?"<>|\r\n\t]')
 
 
 def load(path):
@@ -46,6 +50,22 @@ def render(kind, data, out):
 
 def _rel(target, start_dir):
     return os.path.relpath(target, start_dir).replace('\\', '/')
+
+
+def safe_bookname(title):
+    """把书名转成安全文件名（替换 Windows 非法字符、去首尾空白/点、限长）。"""
+    s = ILLEGAL.sub('_', str(title or ''))
+    s = re.sub(r'\s+', ' ', s).strip().strip('.')
+    return s[:80] or '未命名'
+
+
+def gen_ymd(bundle):
+    """从 generatedAt 取 YYYYMMDD；取不到则用当前日期。"""
+    gen = str(bundle.get('generatedAt') or '')
+    m = re.match(r'(\d{4})-(\d{2})-(\d{2})', gen)
+    if m:
+        return ''.join(m.groups())
+    return datetime.now(TZ).strftime('%Y%m%d')
 
 
 def append_log(log_path, bundle, actions):
@@ -110,26 +130,32 @@ def main():
     ap.add_argument('kind', choices=['report', 'archive', 'all'])
     ap.add_argument('data')
     ap.add_argument('out')
-    ap.add_argument('--archive-dir', default=None, help='all 模式：档案固定输出目录')
-    ap.add_argument('--log', default=None, help='all 模式：内容更新记录 Markdown 路径')
+    ap.add_argument('--archive-dir', default=None, help='all 模式：档案输出目录，默认 <根目录>/读书档案')
+    ap.add_argument('--log', default=None, help='all 模式：更新记录路径，默认 <根目录>/报告及档案更新记录.md')
     args = ap.parse_args()
 
     if args.kind == 'all':
         bundle = load(args.data)
-        out_dir = os.path.abspath(args.out)
-        report_out = os.path.join(out_dir, '个人阅读报告.html')
-        report_dir = os.path.dirname(report_out)
-        # 档案固定目录：默认放在报告输出目录的同级，保证跨日期/跨次调用稳定
+        root = os.path.abspath(args.out)
+        ymd = gen_ymd(bundle)
+        report_out = os.path.join(root, '我的阅读报告_%s.html' % ymd)
+        report_dir = root
         archive_dir = os.path.abspath(args.archive_dir) if args.archive_dir else \
-            os.path.join(os.path.dirname(out_dir), '读书档案')
+            os.path.join(root, '读书档案')
         os.makedirs(archive_dir, exist_ok=True)
 
         report = bundle['report']
         actions = {'new': 0, 'updated': 0, 'names': []}
+        used_names = {}
         for arc in bundle.get('archives', []):
             bid = str(arc['base'].get('bookId') or '')
-            # 按 bookId 命名，保证每本书始终只有一份档案文件
-            fname = '%s_读书档案.html' % (bid or arc['base']['title'][:12])
+            # 按书名命名，保证每本书始终只有一份档案文件；非法字符替换、重名加 bookId 后缀
+            base_name = safe_bookname(arc['base']['title'])
+            stem = base_name
+            if stem in used_names:
+                stem = '%s_%s' % (base_name, bid or used_names[stem])
+            used_names[stem] = bid
+            fname = '%s_读书档案.html' % stem
             apath = os.path.join(archive_dir, fname)
             existed = os.path.exists(apath)
             arc['reportRel'] = _rel(report_out, archive_dir)
@@ -142,7 +168,7 @@ def main():
 
         render('report', report, report_out)
 
-        log_path = args.log or os.path.join(archive_dir, '更新记录.md')
+        log_path = args.log or os.path.join(root, '报告及档案更新记录.md')
         append_log(log_path, bundle, actions)
     else:
         render(args.kind, load(args.data), args.out)

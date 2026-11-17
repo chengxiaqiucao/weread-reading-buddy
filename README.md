@@ -2,7 +2,7 @@
 
 一个完整的微信读书技能：既能回答书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等日常查询，又能把账号数据整理成两份可读、可分享的视觉化页面 —— **个人阅读报告** 与 **每本书的独立读书档案**。
 
-当前版本：**V0.4.3** · 目标：公开技能，供他人调用。
+当前版本：**V0.5.0** · 目标：公开技能，供他人调用。
 
 ## 能力一览
 
@@ -23,7 +23,9 @@
 - 书架按「快照区间优先」选书：首次取最近 10 本在读，此后优先两次快照之间有阅读记录的书（最多 10 本，不足 3 本从最近在读补足）。卡片切换联动封面/进度/阅读信息/本书动态/热门划线 TOP10
 - 好友在读固定 5 位（按最近互动排序），每位好友的书目沿用同一「快照区间优先」口径：区间内有互动的书优先、最多 10 本、不足 3 本从最近补足；不再因区间内无互动好友而缩减人数
 - 每本书一份独立档案：开始阅读时间、累计时长、读后感 Markdown 弹窗（自动保存/导出/导入）、笔记明细（划线/想法/点评）、热门点评 TOP10
-- 档案固定在独立目录、按 bookId 命名，每次生成新增或覆盖更新；另存一份 Markdown 更新记录
+- 所有产物统一到一个根目录 `WeReadBuddy/`：多份 `我的阅读报告_YYYYMMDD.html`、`读书档案/<书本名称>_读书档案.html`、`报告及档案更新记录.md`
+- 档案按书名命名（非法字符替换、重名加 bookId 后缀），每次生成新增或覆盖更新
+- 报告全局区三栏等高，左栏"阅读统计""我的笔记与互动"拉伸填满、底部与"最近想法"对齐；明细长列表固定高度 + 默认折叠，数据增多也不撑开排版
 - 长列表默认折叠、点击展开，首屏和谐
 - 建议用定时任务每周生成一次报告，持续跟踪阅读变化
 
@@ -33,7 +35,7 @@
 python scripts/render.py all data/bundle_sample.json demo/
 ```
 
-打开 `demo/个人阅读报告.html`，点击书架卡片切换书目，点击"打开完整档案 →"。样例数据均已脱敏。
+打开 `demo/我的阅读报告_YYYYMMDD.html`，点击书架卡片切换书目，点击"打开完整档案 →"。样例数据均已脱敏。
 
 ## 真实数据运行
 
@@ -42,12 +44,20 @@ python scripts/render.py all data/bundle_sample.json demo/
 ```bash
 # 先联网检索每本在读书的真实近期动态，写入 data/news/<bookId>.json（没有就留空）
 python scripts/collect.py --out data/bundle.json
-python scripts/render.py all data/bundle.json output/ \
-  --archive-dir output/读书档案 --log output/读书档案/更新记录.md
+python scripts/render.py all data/bundle.json output/WeReadBuddy
+```
+
+产物结构（统一在 `output/WeReadBuddy/`）：
+```
+WeReadBuddy/
+├── 我的阅读报告_YYYYMMDD.html        ← 按日期命名，可保留多份
+├── 读书档案/
+│   └── 书本名称_读书档案.html         ← 每本一份，按书名命名，存在即更新
+└── 报告及档案更新记录.md              ← 每次内容变更追加一条
 ```
 
 - `collect.py` 默认 `--books 10`（按快照区间优先口径选书，详见上）；可选 `--highlights 10 --reviews 10 --friends 5 --snapshot <path> --prev-snapshot <path>`。快照保留最新 `data/snapshots/last_call.json` 与基准 `data/snapshots/prev_call.json` 两份。
-- 报告在 `output/个人阅读报告.html`；档案固定在 `output/读书档案/<bookId>_读书档案.html`，一次一本、存在即更新；`output/读书档案/更新记录.md` 记录每次内容变更。
+- `render.py all` 只需一个根目录参数；可选 `--archive-dir <dir>` 覆盖档案目录、`--log <file>` 覆盖更新记录路径。
 - `data/news/<bookId>.json` 放该书近期动态数组（元素含 `date/cat/title/summary/source/url`）；每次生成都应重新检索同步，没有就留空，页面如实显示"暂无"，不编造资讯。
 
 ## API Key 指引

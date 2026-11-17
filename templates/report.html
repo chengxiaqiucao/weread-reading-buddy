@@ -404,6 +404,22 @@ footer{padding:18px 0 26px;margin-top:12px;font-size:10px}
 .hl-grid .fold-more{grid-column:1/-1;margin:2px 0}
 .fold-more-row td{padding:5px 8px 8px!important;border-bottom:none!important}
 .fold-more-row .fold-more{margin:3px 0 0}
+
+/* ===== v4.1: 全局区左栏拉伸填满，与中栏「最近想法」下端对齐，消除与书架间空挡 ===== */
+#global .zone-grid{align-items:stretch}
+#global .zc-1{display:flex;flex-direction:column;gap:4px}
+#global .zc-1 section{display:flex;flex-direction:column;min-height:0}
+#global .zc-1 #stats{flex:0 0 auto}
+#global .zc-1 #interaction{flex:1 1 auto}
+/* 统计卡 / 互动卡内部纵向均匀分布并适度调大，填满被拉伸的高度 */
+#global .zc-1 .stats,#global .zc-1 .ix-sum{flex:1;align-content:space-evenly;gap:11px}
+#global .zc-1 .stat,#global .zc-1 .ix-sum .card{padding:17px 18px;min-height:88px;display:flex;flex-direction:column;justify-content:center}
+#global .zc-1 .stat .value,#global .zc-1 .ix-v{font-size:24px}
+#global .zc-1 .stat .sub,#global .zc-1 .stat .cmp,#global .zc-1 .ix-d{font-size:11px;line-height:1.5}
+/* 明细长列表固定高度：默认折叠外再限制可视高度，数据增多也不会撑开排版 */
+#ix-books .ix-scroll,#ix-reviews .ix-scroll{max-height:250px;overflow-y:auto;padding-right:3px}
+#ix-books .ix-scroll::-webkit-scrollbar,#ix-reviews .ix-scroll::-webkit-scrollbar{width:6px}
+#ix-books .ix-scroll::-webkit-scrollbar-thumb,#ix-reviews .ix-scroll::-webkit-scrollbar-thumb{background:rgba(30,43,49,.18);border-radius:3px}
 </style>
 
 </head>
@@ -666,18 +682,18 @@ function renderNotes(){
   });
   const shown = changed.length ? changed : CUR.books.slice(0,5);
   $('#ix-books').innerHTML = '<h3 class="serif">笔记数量变化<span class="sub">较上次调用</span></h3>'+
-    '<table class="ix-table"><thead><tr><th>书目</th><th class="num">想法</th><th class="num">划线</th><th class="num">书签</th><th class="num">合计变化</th></tr></thead><tbody id="ix-books-body">'+
+    '<div class="ix-scroll"><table class="ix-table"><thead><tr><th>书目</th><th class="num">想法</th><th class="num">划线</th><th class="num">书签</th><th class="num">合计变化</th></tr></thead><tbody id="ix-books-body">'+
     shown.map(b=>{
       const p = PRE.books.find(x=>x.bookId===b.bookId) || {review:0,note:0,bookmark:0};
       const d = (b.review-p.review)+(b.note-p.note)+(b.bookmark-p.bookmark);
       return '<tr><td>'+esc(b.title)+'</td><td class="num">'+b.review+' <small>'+delta(b.review,p.review)+'</small></td><td class="num">'+b.note+' <small>'+delta(b.note,p.note)+'</small></td><td class="num">'+b.bookmark+'</td><td class="num">'+delta(d,0)+'</td></tr>';
-    }).join('')+'</tbody></table>';
+    }).join('')+'</tbody></table></div>';
   $('#ix-reviews').innerHTML = '<h3 class="serif">在读图书最热点评<span class="sub">每本最多 5 条 · 按点赞整体排序 · 共 '+CUR.publicReviews.length+' 条</span></h3>'+
-    (CUR.publicReviews.length ? '<table class="ix-table"><thead><tr><th>书目</th><th>点评摘要</th><th class="num">赞</th><th class="num">评论</th><th class="num">较上次</th></tr></thead><tbody id="ix-reviews-body">'+
+    (CUR.publicReviews.length ? '<div class="ix-scroll"><table class="ix-table"><thead><tr><th>书目</th><th>点评摘要</th><th class="num">赞</th><th class="num">评论</th><th class="num">较上次</th></tr></thead><tbody id="ix-reviews-body">'+
     CUR.publicReviews.map((r,i)=>{
       const p = PRE.publicReviews[i] || {likes:0,comments:0};
       return '<tr><td>'+esc(r.bookTitle)+'</td><td>'+esc(r.content.length>26?r.content.slice(0,26)+'…':r.content)+'</td><td class="num">'+r.likes+'</td><td class="num">'+r.comments+'</td><td class="num">'+delta(r.likes,p.likes)+' / '+delta(r.comments,p.comments)+'</td></tr>';
-    }).join('')+'</tbody></table>' : '<div class="ix-note">无公开点评</div>');
+    }).join('')+'</tbody></table></div>' : '<div class="ix-note">无公开点评</div>');
     foldify($('#ix-books-body'), 5);
   foldify($('#ix-reviews-body'), 5);
   $('#ix-ideas').innerHTML = '<h3 class="serif">最近想法<span class="sub">账号级 · 共 '+N.recentIdeas.length+' 条，默认展示 4 条</span></h3><div id="ix-ideas-list">'+
