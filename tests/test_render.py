@@ -60,8 +60,13 @@ class RenderTest(unittest.TestCase):
         sys.path.insert(0, SCRIPTS)
         import render
         self.assertEqual(render.safe_bookname('剑来（1-54 完结精校版）'), '剑来（1-54 完结精校版）')
-        self.assertEqual(render.safe_bookname('A/B:C?D'), 'A_B_C_D')
+        self.assertEqual(render.safe_bookname('A/B:C?D'), 'A_B_C_D')  # 半角非法字符
+        self.assertEqual(render.safe_bookname('飘：Gone with the wind'), '飘：Gone with the wind')  # 全角冒号保留
+        self.assertEqual(render.safe_bookname('A\x00B\x01C'), 'A_B_C')  # 控制字符
+        self.assertEqual(render.safe_bookname('CON'), '_CON')  # Windows 保留名
+        self.assertEqual(render.safe_bookname('com1'), '_com1')
         self.assertEqual(render.safe_bookname('  ...  '), '未命名')
+        self.assertLessEqual(len(render.safe_bookname('书' * 200)), 60)  # 限长
 
     def test_samples_valid(self):
         with io.open(os.path.join(ROOT, 'data', 'samples', 'report.json'), encoding='utf-8') as f:

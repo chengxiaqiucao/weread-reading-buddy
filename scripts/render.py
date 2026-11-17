@@ -27,7 +27,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 PLACEHOLDER = '__WEREAD_DATA__'
 TZ = timezone(timedelta(hours=8))
-ILLEGAL = re.compile(r'[\\/:*?"<>|\r\n\t]')
+# Windows 文件名非法字符（半角）+ 所有 ASCII 控制字符；全角标点（：（）等）在 NTFS 合法，保留以贴合书名
+ILLEGAL = re.compile(r'[\\/:*?"<>|\x00-\x1f\x7f]')
+# Windows 保留设备名（大小写不敏感），这些名字不能单独作为文件名
+RESERVED = {'CON', 'PRN', 'AUX', 'NUL'} | \
+           {'COM%d' % i for i in range(1, 10)} | \
+           {'LPT%d' % i for i in range(1, 10)}
 
 
 def load(path):
@@ -53,10 +58,21 @@ def _rel(target, start_dir):
 
 
 def safe_bookname(title):
-    """把书名转成安全文件名（替换 Windows 非法字符、去首尾空白/点、限长）。"""
+    """书名 → 跨平台安全文件名。
+
+    兼容处理：
+      - 半角非法字符 \\/:*?"<>| 与控制字符替换为下划线（全角标点如 ：（） 合法，保留以贴合书名）
+      - 连续下划线/空白折叠、去首尾空白与点（Windows 不允许文件名以点/空格结尾）
+      - 命中 Windows 保留设备名（CON/PRN/COM1...）时加前缀
+      - 限长 60 字，避免长书名 + 后缀超过文件系统单文件名上限
+      - 空名回退为「未命名」
+    """
     s = ILLEGAL.sub('_', str(title or ''))
-    s = re.sub(r'\s+', ' ', s).strip().strip('.')
-    return s[:80] or '未命名'
+    s = re.sub(r'_+', '_', s)
+    s = re.sub(r'\s+', ' ', s).strip().strip('. ').strip()
+    if s.upper() in RESERVED:
+        s = '_' + s
+    return s[:60] or '未命名'
 
 
 def gen_ymd(bundle):
@@ -146,15 +162,19 @@ def main():
 
         report = bundle['report']
         actions = {'new': 0, 'updated': 0, 'names': []}
-        used_names = {}
+        used_stems = set()
         for arc in bundle.get('archives', []):
             bid = str(arc['base'].get('bookId') or '')
             # 按书名命名，保证每本书始终只有一份档案文件；非法字符替换、重名加 bookId 后缀
             base_name = safe_bookname(arc['base']['title'])
             stem = base_name
-            if stem in used_names:
-                stem = '%s_%s' % (base_name, bid or used_names[stem])
-            used_names[stem] = bid
+            if stem in used_stems:
+                stem = '%s_%s' % (base_name[:50], bid or 'dup')
+                n = 2
+                while stem in used_stems:  # 极端情况下 bookId 也撞名，再加序号
+                    stem = '%s_%s_%d' % (base_name[:48], bid or 'dup', n)
+                    n += 1
+            used_stems.add(stem)
             fname = '%s_读书档案.html' % stem
             apath = os.path.join(archive_dir, fname)
             existed = os.path.exists(apath)
