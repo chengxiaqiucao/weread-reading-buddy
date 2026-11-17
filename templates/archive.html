@@ -122,7 +122,7 @@ footer{padding:22px 0 34px;text-align:center;font-size:10.5px;color:var(--ink2);
 .fold-more:hover{background:rgba(46,112,104,.14);border-style:solid}
 </style>
 </head><body>
-<div class="topbar"><div class="wrap"><div class="brand"><span class="seal">档</span><span>读书档案 · BOOK ARCHIVE</span></div><a class="back" href="../个人阅读报告.html">← 返回阅读报告</a></div></div>
+<div class="topbar"><div class="wrap"><div class="brand"><span class="seal">档</span><span>读书档案 · BOOK ARCHIVE</span></div><a class="back" id="back-link" href="../个人阅读报告.html">← 返回阅读报告</a></div></div>
 <div class="wrap">
 <section class="hero"><div class="hero-grid">
 <img class="cover" id="cover" alt="封面">
@@ -142,7 +142,7 @@ footer{padding:22px 0 34px;text-align:center;font-size:10.5px;color:var(--ink2);
 </div>
 <div class="col">
 <section><div class="sh"><h2 class="serif">笔记明细</h2><span class="en">Notes Detail</span></div><div class="card">
-<div class="tabs"><span class="tab on" data-tab="marks">我的划线</span><span class="tab" data-tab="ideas">我的想法</span></div>
+<div class="tabs"><span class="tab on" data-tab="marks">我的划线</span><span class="tab" data-tab="ideas">我的想法</span><span class="tab" data-tab="comments">我的点评</span></div>
 <div class="arc-list" id="list"></div></div></section>
 <section><div class="sh"><h2 class="serif">全书热门点评 TOP10</h2><span class="en">Popular Reviews</span></div><div class="card" id="hot-reviews"></div></section>
 </div>
@@ -174,6 +174,7 @@ const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function day(ts){if(!ts)return '—';if(typeof ts==='string')return ts.replace(/-/g,'/');return new Date(ts*1000).toLocaleDateString('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'});}
 const B=D.base, A=D.archive, KEY='weread_reflection_'+B.bookId;
+if(D.reportRel){const bl=document.getElementById('back-link');if(bl)bl.href=encodeURI(D.reportRel);}
 document.title='读书档案 · '+B.title;
 $('#arc-footer').textContent='读书档案 · '+B.title;
 $('#cover').src=B.cover;$('#title').textContent=B.title;
@@ -188,7 +189,7 @@ $('#ri-grid').innerHTML=[
  ['开始阅读',RD.startReadingDate?('<span style="font-size:12px">'+RD.startReadingDate+'</span>'):'—'],
  ['最后阅读', '<span style="font-size:12px">'+day(A.readingInfo.updateTime)+'</span>'],
  ['累计阅读时长','<span style="font-size:12px">'+hms(RD.readingTime)+'</span>'],
- ['笔记规模',(A.bookmarkTotal+A.ideaTotal)+'<small>条（划线'+A.bookmarkTotal+' / 想法'+A.ideaTotal+'）</small>'],
+ ['笔记规模',(A.bookmarkTotal+A.ideaTotal+(A.commentTotal||0))+'<small>条（划线'+A.bookmarkTotal+' / 想法'+A.ideaTotal+' / 点评'+(A.commentTotal||0)+'）</small>'],
  ['阅读活跃跨度',s.first?(day(s.first)+'<small> ~ '+day(s.last)+'</small>'):'—<small>暂无笔记</small>']
 ].map(([k,v])=>'<div class="ri"><div class="k">'+k+'</div><div class="v serif">'+v+'</div></div>').join('');
 
@@ -266,11 +267,15 @@ function foldify(box, limit){
 let tab='marks';
 function draw(){
  $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===tab));
- const isM=tab==='marks', list=isM?A.bookmarks:A.ideas;
- if(!list.length){$('#list').innerHTML='<div class="empty">这本书暂无'+(isM?'划线':'想法')+'记录</div>';return;}
- $('#list').innerHTML=list.map((m,i)=>isM
-  ?'<div class="arc-item"><div class="ah"><b>'+esc(m.chapterTitle||('章'+m.chapterUid))+'</b><span>'+esc(m.date)+' · range '+esc(m.range)+'</span></div><div class="atxt serif">'+esc(m.markText)+'</div></div>'
-  :'<div class="arc-item"><div class="ah"><b>'+esc(m.chapterName||('第'+m.chapterIdx+'章'))+'</b><span>'+esc(m.date)+(m.star?' · '+m.star+'星':'')+'</span></div><div class="atxt serif">'+esc(m.content)+'</div>'+(m.abstract?'<div class="abs">原文：'+esc(m.abstract)+'</div>':'')+'</div>').join('');
+ const isM=tab==='marks', isC=tab==='comments';
+ const list=isM?A.bookmarks:(isC?(A.comments||[]):A.ideas);
+ const label=isM?'划线':(isC?'点评':'想法');
+ if(!list.length){$('#list').innerHTML='<div class="empty">这本书暂无'+label+'记录</div>';return;}
+ $('#list').innerHTML=list.map((m,i)=>{
+   if(isM) return '<div class="arc-item"><div class="ah"><b>'+esc(m.chapterTitle||('章'+m.chapterUid))+'</b><span>'+esc(m.date)+' · range '+esc(m.range)+'</span></div><div class="atxt serif">'+esc(m.markText)+'</div></div>';
+   if(isC) return '<div class="arc-item"><div class="ah"><b>'+esc(m.chapterName||'整本书评')+'</b><span>'+esc(m.date)+(m.star?' · '+m.star+'星':'')+(m.isFinish?' · 已读完':'')+'</span></div><div class="atxt serif">'+esc(m.content)+'</div>'+(m.abstract?'<div class="abs">原文：'+esc(m.abstract)+'</div>':'')+'</div>';
+   return '<div class="arc-item"><div class="ah"><b>'+esc(m.chapterName||('第'+m.chapterIdx+'章'))+'</b><span>'+esc(m.date)+(m.star?' · '+m.star+'星':'')+'</span></div><div class="atxt serif">'+esc(m.content)+'</div>'+(m.abstract?'<div class="abs">原文：'+esc(m.abstract)+'</div>':'')+'</div>';
+ }).join('');
  foldify($('#list'),6);
 }
 $$('.tab').forEach(t=>t.onclick=()=>{tab=t.dataset.tab;draw();});

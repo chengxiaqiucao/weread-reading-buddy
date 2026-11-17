@@ -1,7 +1,7 @@
 ---
 name: weread-reading-buddy
-description: 微信读书小书童 — 一个完整的微信读书 Gateway 技能，既支持书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等基础查询，又能生成可视化个人阅读报告与每本书的独立读书档案（进度快照对比、热门划线/点评、好友在读、笔记互动、读后感 Markdown 编辑）。当用户提到微信读书相关的任何查询、阅读报告、读书档案、阅读进度变化、导出笔记或整理在读书目时使用。
-version: 0.3.0
+description: 微信读书小书童 — 一个完整的微信读书 Gateway 技能，既支持书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等基础查询，又能生成可视化个人阅读报告与每本书的独立读书档案（进度快照对比、热门划线/点评、好友在读、笔记互动、读后感 Markdown 编辑）。阅读报告覆盖全部在读书目（最多最近10本）、含最近想法原文与在读图书最热点评；档案按 bookId 固定存放、每次新增或更新，并附内容更新记录。当用户提到微信读书相关的任何查询、阅读报告、读书档案、阅读进度变化、导出笔记或整理在读书目时使用。
+version: 0.4.0
 ---
 
 # 微信读书小书童
@@ -77,8 +77,8 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 
 一份单文件 HTML，分上下两区：
 
-- **账号级（上方）**：阅读统计、笔记互动及较上次变化、公开点评明细、好友在读 TOP5、最近想法（书名 + 章节 + 正文 80 字截断 + 日期）。
-- **随书切换（下方）**：书架卡片切换，联动封面、阅读信息、进度变化轨迹、本书近期动态、热门划线 TOP10（每条附最热评论 3 条），并提供"打开完整档案"入口。
+- **账号级（上方）**：阅读统计、笔记互动及较上次变化、在读图书最热点评（每本最多 5 条、按点赞整体排序）、好友在读 TOP5、最近想法（书名 + 章节 + 原文 80 字截断 + 正文 80 字截断 + 日期）。
+- **随书切换（下方）**：**最近在读的全部在读书目**（超过 10 本仅列最近 10 本，按 `readUpdateTime` 排序）卡片切换，联动封面、阅读信息、进度变化轨迹、本书近期动态、热门划线 TOP10（每条附最热评论 3 条），并提供"打开完整档案"入口。
 
 ### 读书档案
 
@@ -87,14 +87,21 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 ### 生成流程
 
 ```bash
+# 0) 同步本书动态（Gateway 无资讯接口）：联网检索最近在读的每本书，
+#    把真实相关条目写入 data/news/<bookId>.json（数组，元素含
+#    date/cat/title/summary/source/url）；检索不到就留空或删除该文件，禁止编造。
+#    每次生成/更新报告时都应重新触发这一步。
+
 # 1) 采集（同时把本次进度/笔记数写入快照，供下次对比）
 python scripts/collect.py --out data/bundle.json
-#    可选：--books 3 --highlights 10 --reviews 10 --friends 5 --snapshot <path>
+#    默认 --books 10（全部在读书目，最多最近 10 本）；可选 --highlights 10 --reviews 10 --friends 5 --snapshot <path>
 
-# 2) 渲染报告 + 每本书的独立档案
-python scripts/render.py all data/bundle.json "输出目录"
-#   输出目录/个人阅读报告.html
-#   输出目录/读书档案/<书名>_读书档案.html
+# 2) 渲染报告 + 每本书的独立档案（档案走固定目录，按 bookId 一书本一份）
+python scripts/render.py all data/bundle.json "输出目录/阅读报告输出_YYYYMMDD" \
+  --archive-dir "输出目录/读书档案" --log "输出目录/读书档案/更新记录.md"
+#   .../阅读报告输出_YYYYMMDD/个人阅读报告.html
+#   .../读书档案/<bookId>_读书档案.html   ← 固定目录，存在即覆盖更新，不存在则新增
+#   .../读书档案/更新记录.md             ← 追加本次报告 + 档案的内容更新情况
 
 # 单独渲染
 python scripts/render.py report  data/samples/report.json            报告.html
@@ -102,6 +109,8 @@ python scripts/render.py archive data/samples/archives/31131759.json 档案.html
 ```
 
 `data/samples/` 为已脱敏的可运行样例，可在没有密钥时用 `python scripts/render.py all data/bundle_sample.json demo/` 预览模板。
+
+**定时跟踪（推荐）**：阅读报告的价值在于"较上次变化"，建议用户用定时任务定期生成，例如每周一 09:00 触发本技能生成一次报告。首次运行无快照（差值显示 ±0 / 首次生成），此后每次都会与上一次快照对比呈现进度与互动变化。定时任务只负责"生成页面"，不改读后感（读后感存浏览器 localStorage，永远不会被覆盖）。
 
 ### 数据流与口径
 
@@ -115,8 +124,12 @@ Gateway API → collect.py → bundle.json + snapshots/last_call.json
 
 - **进度变化**：读取上次快照的进度写到 `previousProgress / previousChapterIdx / previousChapterTitle`，渲染成"进度变化轨迹"；首次运行无快照则差值为 0。
 - **笔记互动变化**：同样基于本地快照对比笔记数与点评赞评数。
+- **在读最热点评**：`/review/list` 返回的他人公开点评按点赞数降序，每本最多 5 条，汇总后整体排序；不是"本人点评互动"。
+- **最近想法原文**：`/review/list/mine` 的 `abstract`（划线原文）与 `content`（想法正文）各自 80 字截断展示；账号级聚合最近 10 条。
+- **档案文件**：固定在 `--archive-dir`，文件名 `<bookId>_读书档案.html`，每本一份；每次生成存在即覆盖更新、不存在则新增。报告通过 `archiveRel`、档案通过 `reportRel` 互相跳转，跨目录可用。
 - **读后感**：仅存用户浏览器 localStorage（键 `weread_reflection_<bookId>`），档案页可导出/导入 JSON，不上传服务器。
-- **本书动态**：Gateway 无资讯接口。`collect.py` 读取 `data/news/<bookId>.json`（数组，元素含 `date/cat/title/summary/source/url`）；无文件则显示"暂无"，不编造。
+- **本书动态**：Gateway 无资讯接口。每次生成时联网检索真实更新写入 `data/news/<bookId>.json`（数组，元素含 `date/cat/title/summary/source/url`），由 `collect.py` 读入 bundle；无文件则显示"暂无"，不编造。
+- **更新记录**：每次 `render.py all` 向 `--log` Markdown 追加一条（时间、在读书目、进度变化、笔记互动、档案新增/更新数），-latest 在最上。
 
 ## API Key 指引
 
@@ -138,7 +151,7 @@ Gateway API → collect.py → bundle.json + snapshots/last_call.json
 - `/readdata/detail` 的 `readLongest` 有 5 分钟阈值且最多 10 条，不能当稳定的"本周读过哪些书"。
 - 好友接口无阅读时长、无友好度，只能按最近互动时间与动态条数排序。
 - 个人想法接口 `/review/list/mine`、`/review/single` 均不返回"想法的点赞数"，只有 `isLike`（本人是否点赞过）；公开点评 `/review/list` 才有 `likesCount`。因此"最近想法"不展示点赞数。
-- Gateway 的 `skill_version`（当前 `1.0.6`）是本包向服务端上报的协议版本，与本技能版本（`0.3.0`）无关。
+- Gateway 的 `skill_version`（当前 `1.0.6`）是本包向服务端上报的协议版本，与本技能版本（`0.4.0`）无关。
 
 ## 隐私
 
@@ -154,8 +167,9 @@ Gateway API → collect.py → bundle.json + snapshots/last_call.json
 | `references/capabilities/` | 8 类基础查询能力的工作流与字段说明 |
 | `references/API_CAPABILITIES.md` | Gateway 全部接口能力与坑 |
 | `templates/report.html` / `archive.html` | 报告/档案模板，占位符 `__WEREAD_DATA__` |
-| `scripts/collect.py` | 调 Gateway 采集、维护快照、产出 bundle |
-| `scripts/render.py` | 模板渲染（report / archive / all） |
+| `scripts/collect.py` | 调 Gateway 采集、维护快照、产出 bundle（含好友真实姓名、点评拆分、最热点评排序） |
+| `scripts/render.py` | 模板渲染（report / archive / all），固定档案目录 + 更新记录 |
 | `scripts/prepare_assets.py` | 从既有成品 HTML 抽取样例与模板（开发用，已内置脱敏） |
+| `data/news/<bookId>.json` | 每本书近期动态（生成时联网检索写入；真实数据，无密钥/无个人信息） |
 | `data/samples/` | 已脱敏的可运行样例数据 |
 | `tests/test_render.py` | 渲染冒烟测试 |

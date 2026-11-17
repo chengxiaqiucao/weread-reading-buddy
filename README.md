@@ -2,7 +2,7 @@
 
 一个完整的微信读书技能：既能回答书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等日常查询，又能把账号数据整理成两份可读、可分享的视觉化页面 —— **个人阅读报告** 与 **每本书的独立读书档案**。
 
-当前版本：**V0.3.0** · 目标：公开技能，供他人调用。
+当前版本：**V0.4.0** · 目标：公开技能，供他人调用。
 
 ## 能力一览
 
@@ -17,10 +17,13 @@
 **增强输出**（可视化页面）
 
 - 阅读报告用本地快照对比"上次 → 本次"的变化，不伪造历史轨迹
-- 账号级统计、笔记互动、好友在读、最近想法（书名 + 章节 + 80 字截断）
-- 书架卡片切换，封面/进度/阅读信息/本书动态/热门划线 TOP10 全部联动
-- 每本书一份独立档案：开始阅读时间、累计时长、读后感 Markdown 弹窗（自动保存/导出/导入）、笔记明细、热门点评 TOP10
+- 账号级统计、笔记互动、好友在读（真实姓名）、最近想法（书名 + 章节 + 原文/正文各 80 字截断）
+- 在读图书最热点评（每本最多 5 条、按点赞整体排序），标签不再误称"本人点评互动"
+- 书架覆盖全部在读书目（最多最近 10 本），卡片切换联动封面/进度/阅读信息/本书动态/热门划线 TOP10
+- 每本书一份独立档案：开始阅读时间、累计时长、读后感 Markdown 弹窗（自动保存/导出/导入）、笔记明细（划线/想法/点评）、热门点评 TOP10
+- 档案固定在独立目录、按 bookId 命名，每次生成新增或覆盖更新；另存一份 Markdown 更新记录
 - 长列表默认折叠、点击展开，首屏和谐
+- 建议用定时任务每周生成一次报告，持续跟踪阅读变化
 
 ## 30 秒体验（无需密钥）
 
@@ -35,13 +38,15 @@ python scripts/render.py all data/bundle_sample.json demo/
 由用户自行设置密钥（见下方说明），然后：
 
 ```bash
+# 先联网检索每本在读书的真实近期动态，写入 data/news/<bookId>.json（没有就留空）
 python scripts/collect.py --out data/bundle.json
-python scripts/render.py all data/bundle.json output/
+python scripts/render.py all data/bundle.json output/ \
+  --archive-dir output/读书档案 --log output/读书档案/更新记录.md
 ```
 
-`collect.py` 可选参数：`--books 3 --highlights 10 --reviews 10 --friends 5 --snapshot <path>`。
-
-`data/news/<bookId>.json` 可放该书近期动态数组；没有就留空，页面如实显示"暂无"，不编造资讯。
+- `collect.py` 默认 `--books 10`（全部在读书目，最多最近 10 本）；可选 `--highlights 10 --reviews 10 --friends 5 --snapshot <path>`。
+- 报告在 `output/个人阅读报告.html`；档案固定在 `output/读书档案/<bookId>_读书档案.html`，一次一本、存在即更新；`output/读书档案/更新记录.md` 记录每次内容变更。
+- `data/news/<bookId>.json` 放该书近期动态数组（元素含 `date/cat/title/summary/source/url`）；每次生成都应重新检索同步，没有就留空，页面如实显示"暂无"，不编造资讯。
 
 ## API Key 指引
 

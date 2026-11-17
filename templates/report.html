@@ -443,7 +443,7 @@ footer{padding:18px 0 26px;margin-top:12px;font-size:10px}
   </div>
 
   <section class="shelfbar" id="shelf">
-    <div class="sec-head"><h2 class="serif">在读书架</h2><span class="en">Reading Shelf</span><span class="note">同时在读 3 本 · 点击卡片切换当前书</span></div>
+    <div class="sec-head"><h2 class="serif">在读书架</h2><span class="en">Reading Shelf</span><span class="note" id="shelf-count"></span></div>
     <div class="shelf-row" id="shelf-row"></div>
   </section>
 
@@ -539,6 +539,7 @@ const BK = () => D.books[active];
 const key = bid => 'weread_reflection_' + bid;
 
 function renderShelf(){
+  $('#shelf-count').textContent = '最近在读 '+D.books.length+' 本 · 点击卡片切换当前书';
   $('#shelf-row').innerHTML = D.books.map((bk,i)=>{
     const b = bk.base;
     return '<div class="shelf-item '+(i===active?'active':'')+'" data-i="'+i+'">'+
@@ -605,12 +606,13 @@ function renderBookNews(){
 
 function renderArchive(){
   const a = BK().archive, b = BK().base;
-  const NAMES={'31131759':'剑来','25600453':'股票作手回忆录','23523072':'中国历代政治得失'};
-  const fname = encodeURIComponent((b.archiveFile||NAMES[b.bookId]||b.title.slice(0,12))+'_读书档案.html');
+  const href = b.archiveRel ? encodeURI(b.archiveRel) : '';
+  const cmtTotal = a.commentTotal || 0;
   $('#arc-entry').innerHTML =
     '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--cinnabar);margin-bottom:3px"><span style="font-size:13px">▤</span> 我的读书档案</div>'+
-    '<div style="font-size:9.5px;color:var(--ink2);line-height:1.5;margin-bottom:7px">划线 '+a.bookmarkTotal+' · 想法 '+a.ideaTotal+' 条 · 独立文件存放</div>'+
-    '<a href="读书档案/'+fname+'" target="_blank" rel="noopener" class="btn btn-save" style="display:block;text-align:center;text-decoration:none;font-size:10.5px;padding:6px 8px">打开完整档案 →</a>';
+    '<div style="font-size:9.5px;color:var(--ink2);line-height:1.5;margin-bottom:7px">划线 '+a.bookmarkTotal+' · 想法 '+a.ideaTotal+(cmtTotal?(' · 点评 '+cmtTotal):'')+' 条 · 独立文件存放</div>'+
+    (href ? '<a href="'+href+'" target="_blank" rel="noopener" class="btn btn-save" style="display:block;text-align:center;text-decoration:none;font-size:10.5px;padding:6px 8px">打开完整档案 →</a>'
+          : '<span style="font-size:10px;color:var(--ink2)">档案未生成</span>');
 }
 
 function renderDynamic(){ renderShelf(); renderHero(); renderDelta(); renderReadingInfo(); renderHighlights(); renderBookNews(); renderArchive(); revealAll(); }
@@ -636,7 +638,7 @@ function renderNotes(){
     ['笔记总数', CUR.totalNotes, PRE.totalNotes, '条'],
     ['覆盖书籍', CUR.totalBooks, PRE.totalBooks, '本'],
     ['想法 / 划线', CUR.reviewSum, PRE.reviewSum, '条想法'],
-    ['公开点评互动', CUR.reviewLikesSum + CUR.reviewCommentsSum, PRE.reviewLikesSum + PRE.reviewCommentsSum, '赞+评论']
+    ['在读点评赞评', CUR.reviewLikesSum + CUR.reviewCommentsSum, PRE.reviewLikesSum + PRE.reviewCommentsSum, '赞+评论']
   ].map(([k,v,o,u])=>'<div class="card reveal"><div class="ix-k">'+k+'</div><div class="ix-v serif">'+v+'</div><div class="ix-d '+(v===o?'zero':'')+'">较上次 '+delta(v,o)+' '+u+'</div></div>').join('');
   const changed = CUR.books.filter(b=>{
     const p = PRE.books.find(x=>x.bookId===b.bookId);
@@ -650,7 +652,7 @@ function renderNotes(){
       const d = (b.review-p.review)+(b.note-p.note)+(b.bookmark-p.bookmark);
       return '<tr><td>'+esc(b.title)+'</td><td class="num">'+b.review+' <small>'+delta(b.review,p.review)+'</small></td><td class="num">'+b.note+' <small>'+delta(b.note,p.note)+'</small></td><td class="num">'+b.bookmark+'</td><td class="num">'+delta(d,0)+'</td></tr>';
     }).join('')+'</tbody></table>';
-  $('#ix-reviews').innerHTML = '<h3 class="serif">本人公开点评互动<span class="sub">共 '+CUR.publicReviews.length+' 条</span></h3>'+
+  $('#ix-reviews').innerHTML = '<h3 class="serif">在读图书最热点评<span class="sub">每本最多 5 条 · 按点赞整体排序 · 共 '+CUR.publicReviews.length+' 条</span></h3>'+
     (CUR.publicReviews.length ? '<table class="ix-table"><thead><tr><th>书目</th><th>点评摘要</th><th class="num">赞</th><th class="num">评论</th><th class="num">较上次</th></tr></thead><tbody id="ix-reviews-body">'+
     CUR.publicReviews.map((r,i)=>{
       const p = PRE.publicReviews[i] || {likes:0,comments:0};
@@ -659,7 +661,13 @@ function renderNotes(){
     foldify($('#ix-books-body'), 5);
   foldify($('#ix-reviews-body'), 5);
   $('#ix-ideas').innerHTML = '<h3 class="serif">最近想法<span class="sub">账号级 · 共 '+N.recentIdeas.length+' 条，默认展示 4 条</span></h3><div id="ix-ideas-list">'+
-    N.recentIdeas.map(i=>{const raw=i.content||'';const txt=raw.length>80?raw.slice(0,80)+'…':raw;return '<div class="idea"><span class="ch">第'+i.chapterIdx+'章</span><div class="txt"><div class="bk">《'+esc(i.bookTitle||'—')+'》</div>'+esc(txt)+'<div class="abs">'+dt(i.createTime)+'</div></div></div>';}).join('')+'</div>';
+    N.recentIdeas.map(i=>{
+      const clip=(s,n)=>{s=s||'';return s.length>n?s.slice(0,n)+'…':s;};
+      const raw=clip(i.content,80), abs=clip(i.abstract,80);
+      return '<div class="idea"><span class="ch">第'+i.chapterIdx+'章</span><div class="txt">'+
+        '<div class="bk">《'+esc(i.bookTitle||'—')+'》 · '+dt(i.createTime)+'</div>'+
+        (abs?'<div class="abs">原文：'+esc(abs)+'</div>':'')+
+        '<div>'+esc(raw)+'</div></div></div>';}).join('')+'</div>';
   foldify($('#ix-ideas-list'), 4);
 }
 
