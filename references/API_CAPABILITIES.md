@@ -22,7 +22,7 @@ Content-Type: application/json
 curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
   -H "Authorization: Bearer $WEREAD_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"api_name":"/store/search","keyword":"三体","scope":10,"count":3,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/store/search","keyword":"三体","scope":10,"count":3,"skill_version":"1.0.6"}'
 ```
 
 - **禁止**把业务参数包在 `params`/`data` 内，否则参数不会被转发，表现为分页失效。
@@ -77,7 +77,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **真实结构**：`results[].books[].bookInfo.{bookId,title,author,cover,newRating,newRatingCount,readerLink,deepLink}`
 - **示例**：搜书并取 bookId
   ```bash
-  -d '{"api_name":"/store/search","keyword":"三体","scope":10,"count":3,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/store/search","keyword":"三体","scope":10,"count":3,"skill_version":"1.0.6"}'
   ```
   实测"三体"返回 `results[0].books[0].bookInfo.bookId = "695233"`（三体全集）
 - **场景**：所有需要"书名 → bookId"转换的流程入口。
@@ -89,7 +89,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`books[]`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/recommend","count":12,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/recommend","count":12,"skill_version":"1.0.6"}'
   ```
 
 #### `/book/similar` — 相似书推荐
@@ -98,7 +98,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`booksimilar[]`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/similar","bookId":"31131759","count":12,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/similar","bookId":"31131759","count":12,"skill_version":"1.0.6"}'
   ```
 
 #### `/discover/interact/type3` — 好友在读动态
@@ -119,7 +119,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 
 
   ```bash
-  -d '{"api_name":"/book/info","bookId":"31131759","skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/info","bookId":"31131759","skill_version":"1.0.6"}'
   ```
 - **注意**：`newRating` 为百分制（如 930 = 9.3 分）。
 
@@ -129,7 +129,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`chapterUpdateTime`、`chapters[].{chapterUid,chapterIdx,title,wordCount,level,paid,isMPChapter,anchors}`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/chapterinfo","bookId":"31131759","skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/chapterinfo","bookId":"31131759","skill_version":"1.0.6"}'
   ```
   实测《剑来》共 643 章，`chapterUid=1592` 对应 idx=598。
 - **场景**：把 chapterUid 映射为章节序号/标题，是所有章节级接口的定位基础。
@@ -140,7 +140,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`book.{chapterUid,chapterOffset,progress,updateTime,recordReadingTime,finishTime,isStartReading}`、`timestamp`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/getprogress","bookId":"31131759","skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/getprogress","bookId":"31131759","skill_version":"1.0.6"}'
   ```
   实测《剑来》：`chapterUid=1592, chapterOffset=25179, progress=94, updateTime=1794763127`
 - **关键注意**：
@@ -159,7 +159,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **真实结构**：`books[].{bookId,title,author,cover,readUpdateTime,updateTime,finishReading,readerLink,deepLink}`
 - **示例**：
   ```bash
-  -d '{"api_name":"/shelf/sync","skill_version":"1.0.5"}'
+  -d '{"api_name":"/shelf/sync","skill_version":"1.0.6"}'
   ```
   实测书架 141 本；书架书数按 `books.length + albums.length + (mp非空?1:0)` 计算。
 - **场景**："我有哪些书"、筛选最近阅读的书（`readUpdateTime`）。
@@ -171,8 +171,8 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`totalBookCount`、`totalNoteCount`、`books[].{bookId,book,reviewCount,noteCount,bookmarkCount,readingProgress,markedStatus,sort}`、`hasMore`
 - **示例**：
   ```bash
-  -d '{"api_name":"/user/notebooks","count":20,"skill_version":"1.0.5"}'
-  -d '{"api_name":"/user/notebooks","count":20,"lastSort":1793847318,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/user/notebooks","count":20,"skill_version":"1.0.6"}'
+  -d '{"api_name":"/user/notebooks","count":20,"lastSort":1793847318,"skill_version":"1.0.6"}'
   ```
 - **关键口径**：
   - 单本书笔记数 = `reviewCount + noteCount + bookmarkCount`
@@ -186,7 +186,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`updated[].{bookmarkId,chapterUid,markText,range,createTime,colorStyle}`、`chapters[]`、`book`、`removed`、`synckey`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/bookmarklist","bookId":"31131759","skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/bookmarklist","bookId":"31131759","skill_version":"1.0.6"}'
   ```
 - **场景**：导出"我的划线"、按章节分组。
 - **注意**：只返回划线（type=1），已过滤书签；`range` 是字符位置范围（如 `"393-401"`），不是页码。
@@ -197,7 +197,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`reviews[].review.{reviewId,content,abstract,range,chapterUid,chapterIdx,createTime,star,chapterName,isFinish}`、`totalCount`、`hasMore`
 - **示例**：
   ```bash
-  -d '{"api_name":"/review/list/mine","bookid":"31131759","count":20,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/review/list/mine","bookid":"31131759","count":20,"skill_version":"1.0.6"}'
   ```
 - **注意**：`abstract`+`range` 仅"针对原文发表的想法"才有；整本书评可能为空。
 
@@ -211,7 +211,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`totalCount`（实测《剑来》959）、`items[].{chapterUid,range,markText,totalCount,bookmarkId}`、`chapters[]`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/bestbookmarks","bookId":"31131759","chapterUid":0,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/bestbookmarks","bookId":"31131759","chapterUid":0,"skill_version":"1.0.6"}'
   ```
   实测 Top1："她向前走了两步，一把抱住了那个大骊少年……"（4140 人划线，range `21502-21592`）
 - **关键机制（实测确认）**：
@@ -225,7 +225,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`underlines[].{range,count,score,type}`、`synckey`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/underlines","bookId":"31131759","chapterUid":1074,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/underlines","bookId":"31131759","chapterUid":1074,"skill_version":"1.0.6"}'
   ```
 - **场景**：判断哪些段落"很多人划线"，用于定位热门位置。
 - **注意**：**不含划线文本**；要文本需配合 `/book/bestbookmarks` 或 `/book/bookmarklist`。
@@ -236,7 +236,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`reviews[].{range,totalCount,hasMore,maxIdx,synckey,pageReviews[]}`；`pageReviews[].review.{content,abstract,range,author,createTime}`
 - **示例**：
   ```bash
-  -d '{"api_name":"/book/readreviews","bookId":"31131759","chapterUid":1074,"reviews":[{"range":"21502-21592","count":5,"maxIdx":0}],"skill_version":"1.0.5"}'
+  -d '{"api_name":"/book/readreviews","bookId":"31131759","chapterUid":1074,"reviews":[{"range":"21502-21592","count":5,"maxIdx":0}],"skill_version":"1.0.6"}'
   ```
   实测该 range 返回 5 条评论，`totalCount=246`，可翻页。
 - **注意**：每个划线最多 20 条；`reviews` 是**数组**，须按接口约定传对象数组，不要拆成顶层字段。
@@ -249,7 +249,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
   `reviews[].{idx, review:{ reviewId, likesCount, commentsCount, friendLikesCount, review:{ content, htmlContent, star, author:{name,avatar}, book:{bookId,title,author}, chapterName, createTime, isFinish }}}`
 - **示例**：
   ```bash
-  -d '{"api_name":"/review/list","bookId":"31131759","reviewListType":1,"count":2,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/review/list","bookId":"31131759","reviewListType":1,"count":2,"skill_version":"1.0.6"}'
   ```
   实测《剑来》推荐点评总数 1701，含点赞数（如 846）、评论数（如 21）。
 - **注意**：内容字段在内层 `reviews[].review.review.content`，不要读错层级；`star` 为 20/40/60/80/100（1-5 星）。
@@ -260,7 +260,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回**：`reviewId`、`review`、`htmlContent`、`bookReviewCount`
 - **示例**：
   ```bash
-  -d '{"api_name":"/review/single","reviewId":"379542066_851KJo8xA","commentsCount":10,"likesCount":10,"skill_version":"1.0.5"}'
+  -d '{"api_name":"/review/single","reviewId":"379542066_851KJo8xA","commentsCount":10,"likesCount":10,"skill_version":"1.0.6"}'
   ```
 - **场景**：获取某条热门评论的点赞/回复列表。
 
@@ -274,7 +274,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
 - **返回（部分）**：`baseTime`、`readTimes`（分桶时长，key=时间戳 value=秒）、`dailyReadTimes`、`readDays`、`totalReadTime`（秒）、`dayAverageReadTime`、`compare`、`readLongest[]`、`readStat[]`、`preferCategory[]`、`preferTime[]`、`preferAuthor[]`、`preferPublisher[]`、`rank`、`medals`、`readRate`、`wrReadTime`、`wrListenTime`
 - **示例**：
   ```bash
-  -d '{"api_name":"/readdata/detail","mode":"weekly","skill_version":"1.0.5"}'
+  -d '{"api_name":"/readdata/detail","mode":"weekly","skill_version":"1.0.6"}'
   ```
   实测当日：baseTime=2026-11-16（周一零点）、readDays=1、totalReadTime=94 秒、readLongest=0 条。
 - **关键口径与坑**：
@@ -297,7 +297,7 @@ curl -X POST "https://i.weread.qq.com/api/agent/gateway" \
   ```
 
 
-  -d '{"api_name":"/page/submit","scene":1,"html":"<html><body>年度报告</body></html>","skill_version":"1.0.5"}'
+  -d '{"api_name":"/page/submit","scene":1,"html":"<html><body>年度报告</body></html>","skill_version":"1.0.6"}'
   ```
 - **场景**：把生成的 HTML 报告上传到平台并返回页面标识。
 

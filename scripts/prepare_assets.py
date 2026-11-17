@@ -53,6 +53,17 @@ def build_friend_aliases(report_data):
     return mapping
 
 
+def mask_review_authors(reviews):
+    """脱敏公开点评：作者名 -> 读者-N，reviewId 数字前缀 -> FAKE-N_后缀。"""
+    for i, rv in enumerate(reviews or [], 1):
+        if isinstance(rv.get('author'), str):
+            rv['author'] = '读者-' + str(i)
+        rid = rv.get('reviewId')
+        if isinstance(rid, str) and re.match(r'^\d+_', rid):
+            rv['reviewId'] = 'FAKE-%d_%s' % (i, rid.split('_', 1)[1])
+    return reviews
+
+
 def apply_aliases(obj, mapping, alias_name_keys=('name', 'author')):
     """递归把字符串值中出现的真实姓名替换为 好友-N（含子串，如 @某某）。"""
     if isinstance(obj, dict):
@@ -82,6 +93,14 @@ def main():
     report_data.pop('simulated', None)
     aliases = build_friend_aliases(report_data)
     report_data = apply_aliases(report_data, aliases)
+    # 好友 vid 属于可识别 ID，样例中一律替换为假 ID（真实数据由 collect.py 提供）
+    for i, f in enumerate(report_data.get('friends') or [], 1):
+        if 'vid' in f:
+            f['vid'] = 'FRIEND-' + str(i)
+    # 公开点评作者脱敏
+    _cur = (report_data.get('notes') or {}).get('current') or {}
+    if 'publicReviews' in _cur:
+        mask_review_authors(_cur['publicReviews'])
     # 源试跑页的最近想法无 bookTitle，按书名回填（样例均为剑来，真实数据由 collect.py 提供）
     _ideas = (report_data.get('notes') or {}).get('recentIdeas') or []
     if _ideas and not _ideas[0].get('bookTitle') and report_data.get('books'):
@@ -122,6 +141,7 @@ def main():
         data['reading'] = json.loads(m.group(2))
         data['readingReviews'] = json.loads(m.group(3))
         data = apply_aliases(data, aliases)  # 点评作者中若含好友真名一并脱敏
+        mask_review_authors(data.get('readingReviews'))  # 公开点评作者与 reviewId 脱敏
         data['base']['archiveFile'] = name[:-5].replace('_读书档案', '')
         bid = str(data['base']['bookId'])
         write(os.path.join(ROOT, 'data', 'samples', 'archives', bid + '.json'),

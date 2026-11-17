@@ -16,7 +16,7 @@ import urllib.error
 from datetime import datetime, timezone, timedelta
 
 GATEWAY = 'https://i.weread.qq.com/api/agent/gateway'
-SKILL_VERSION = '1.0.5'  # Gateway 要求的技能版本，与本包 VERSION 无关
+SKILL_VERSION = '1.0.6'  # Gateway 要求的技能版本，与本包 VERSION 无关
 TZ = timezone(timedelta(hours=8))
 
 
