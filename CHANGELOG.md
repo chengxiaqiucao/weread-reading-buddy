@@ -1,5 +1,12 @@
 # Changelog
 
+## V0.5.2 — 2026-11-17
+
+- **发布素材**：新增 3 张 logo 候选与 3 张脱敏效果截图（`assets/`），README 补充图标候选与效果预览小节。
+- **SkillHub 必填元数据**：SKILL.md frontmatter 补齐 `slug` / `displayName` / `summary` / `license` / `homepage` / `tags`。
+- **样例脱敏增强**：`prepare_assets.py` 补齐热门划线评论作者脱敏，样例数据同步刷新。
+- 版本号统一至 `0.5.2`（SKILL.md / README / VERSION / CHANGELOG），与 GitHub tag 对齐。
+
 ## V0.5.0 — 2026-11-17
 
 - **产物目录重构**：统一到单一根目录 `WeReadBuddy/`，含多份 `我的阅读报告_YYYYMMDD.html`、`读书档案/` 与 `报告及档案更新记录.md`；不再有"日期目录内嵌报告 + 独立档案目录"两套位置。

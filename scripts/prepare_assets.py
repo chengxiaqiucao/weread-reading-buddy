@@ -64,6 +64,18 @@ def mask_review_authors(reviews):
     return reviews
 
 
+def mask_highlight_comment_authors(books):
+    """脱敏热门划线下的评论作者：真实昵称 -> 评论者-N（按出现顺序编号）。"""
+    n = 0
+    for bk in books or []:
+        for hl in bk.get('highlights') or []:
+            for cm in hl.get('comments') or []:
+                if isinstance(cm.get('author'), str):
+                    n += 1
+                    cm['author'] = '评论者-' + str(n)
+    return books
+
+
 def apply_aliases(obj, mapping, alias_name_keys=('name', 'author')):
     """递归把字符串值中出现的真实姓名替换为 好友-N（含子串，如 @某某）。"""
     if isinstance(obj, dict):
@@ -101,6 +113,8 @@ def main():
     _cur = (report_data.get('notes') or {}).get('current') or {}
     if 'publicReviews' in _cur:
         mask_review_authors(_cur['publicReviews'])
+    # 热门划线评论作者脱敏（禁止真实昵称进入样例）
+    mask_highlight_comment_authors(report_data.get('books'))
     # 源试跑页的最近想法无 bookTitle，按书名回填（样例均为剑来，真实数据由 collect.py 提供）
     _ideas = (report_data.get('notes') or {}).get('recentIdeas') or []
     if _ideas and not _ideas[0].get('bookTitle') and report_data.get('books'):
