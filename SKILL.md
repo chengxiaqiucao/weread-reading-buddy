@@ -2,22 +2,21 @@
 name: weread-reading-buddy
 slug: weread-reading-buddy-chengxia
 displayName: 微信读书小书童
-description: 微信读书小书童 — 一个完整的微信读书 Gateway 技能，既支持书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等基础查询，又能生成可视化个人阅读报告与每本书的独立读书档案（进度快照对比、热门划线/点评、好友在读、笔记互动、读后感 Markdown 编辑）。阅读报告覆盖全部在读书目（最多最近10本）、含最近想法原文与在读图书最热点评；档案按书名统一存放到一个根目录、每次新增或更新，并附内容更新记录。当用户提到微信读书相关的任何查询、阅读报告、读书档案、阅读进度变化、导出笔记或整理在读书目时使用。
-summary: 微信读书数据查询 + 可视化个人阅读报告与读书档案，支持进度快照对比、好友在读、热门划线点评与读后感编辑
-version: 0.5.2
+description: 微信读书小书童 — 这是一个完整的微信读书伴读技能，既支持书籍搜索、书架、阅读统计、笔记划线、热门划线、书籍点评、好书推荐等基础查询，又能生成个人的可视化阅读报告与每本书的独立读书档案（进度快照对比、热门划线/点评、好友在读、笔记互动、读后感 Markdown 编辑）。帮助用户更好地在本地管理自己的微信读书笔记和建立阅读档案
+summary: 微信读书数据 + 可视化的个人阅读报告与读书档案
+version: 0.5.3
 license: MIT
 homepage: https://github.com/chengxiaqiucao/weread-reading-buddy
 tags:
-  - 微信读书
-  - 阅读报告
-  - 读书档案
-  - 阅读统计
-  - 笔记划线
+  - 知识管理
+  - 笔记整理
+  - 摘要总结
+  - 资料整理
 ---
 
 # 微信读书小书童
 
-通过微信读书 Agent Gateway 读取账号数据，提供两层能力：
+通过微信读书开放接口获取账号数据，提供两层能力：
 
 - **基础查询**：搜索书籍、查看书籍信息与进度、书架、阅读统计、个人笔记划线、章节热门划线与划线下想法、书籍公开点评、个性化与相似好书推荐。
 - **增强输出**：把账号数据整理成两份可直接打开的视觉化页面 —— **个人阅读报告** 与 **每本书的独立读书档案**。
@@ -159,6 +158,8 @@ Gateway API → collect.py → bundle.json + snapshots/{last_call,prev_call}.jso
 
 ## API Key 指引
 
+首次使用需从微信读书官方页面（https://weread.qq.com/r/weread-skills）获取 API Key，并在本地完成配置。本技能不保存、不记录密钥。
+
 密钥由用户自行提供，**优先引导用户在本地设置环境变量**，不要在对话中索取、回显或代存密钥：
 
 - macOS / Linux：`export WEREAD_API_KEY="wrk-你的密钥"`
@@ -177,7 +178,7 @@ Gateway API → collect.py → bundle.json + snapshots/{last_call,prev_call}.jso
 - `/readdata/detail` 的 `readLongest` 有 5 分钟阈值且最多 10 条，不能当稳定的"本周读过哪些书"。
 - 好友接口无阅读时长、无友好度，只能按最近互动时间与动态条数排序。
 - 个人想法接口 `/review/list/mine`、`/review/single` 均不返回"想法的点赞数"，只有 `isLike`（本人是否点赞过）；公开点评 `/review/list` 才有 `likesCount`。因此"最近想法"不展示点赞数。
-- Gateway 的 `skill_version`（当前 `1.0.6`）是本包向服务端上报的协议版本，与本技能版本（`0.5.2`）无关。
+- Gateway 的 `skill_version`（当前 `1.0.6`）是本包向服务端上报的协议版本，与本技能版本（`0.5.3`）无关。
 
 ## 隐私
 

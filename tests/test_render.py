@@ -21,7 +21,10 @@ class RenderTest(unittest.TestCase):
                    os.path.join(ROOT, 'data', 'bundle_sample.json'), root]
             subprocess.run(cmd, check=True, cwd=ROOT, capture_output=True)
 
-            report = os.path.join(root, '我的阅读报告_20261117.html')
+            reports = [f for f in os.listdir(root)
+                       if re.match(r'^我的阅读报告_\d{8}\.html$', f)]
+            self.assertTrue(reports, '应生成按日期命名的阅读报告')
+            report = os.path.join(root, sorted(reports)[-1])
             archive_dir = os.path.join(root, '读书档案')
             log = os.path.join(root, '报告及档案更新记录.md')
             self.assertTrue(os.path.exists(report))

@@ -1,5 +1,11 @@
 # Changelog
 
+## V0.5.3 — 2026-11-18
+
+- **文档精简**：README 删除图标候选表与发布前检查清单，仅保留选定 logo；增强输出与 API Key 段落改为面向使用者的通俗表述。
+- **元数据同步**：SKILL.md 的 `description` / `summary` 与 README 对齐，改用"微信读书开放接口"表述；`tags` 调整为知识管理类（知识管理/笔记整理/摘要总结/资料整理）；补充 API Key 官方获取来源（weread.qq.com/r/weread-skills）与"不保存、不记录"声明。
+- 版本号统一至 `0.5.3`（SKILL.md / README / VERSION / CHANGELOG），用于网页端更新发布。
+
 ## V0.5.2 — 2026-11-17
 
 - **发布素材**：新增 3 张 logo 候选与 3 张脱敏效果截图（`assets/`），README 补充图标候选与效果预览小节。
